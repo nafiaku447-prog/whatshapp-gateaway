@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="WhatsApp API Gateway Indonesia untuk mengirim notifikasi, kirim pesan, bot, pesan schedule dan reminder">
+    <meta name="keywords" content="whatsapp api, wa gateway, whatsapp business, api indonesia">
+    <title>WA Gateway - WhatsApp API Gateway Indonesia</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+
+<body>
+    <!-- Gradient Background -->
+    <div class="gradient-bg"></div>
+
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div class="container">
+            <div class="nav-wrapper">
+                <div class="logo">
+                    <i class="fab fa-whatsapp"></i>
+                    <span>WA<span class="highlight">Gateway</span></span>
+                </div>
+
+                <div class="nav-links" id="navLinks">
+                    <a href="#home" class="nav-link active">Home</a>
+                    <a href="#features" class="nav-link">Fitur</a>
+                    <a href="#pricing" class="nav-link">Harga</a>
+                    <a href="#documentation" class="nav-link">Dokumentasi</a>
+                    <a href="#faq" class="nav-link">FAQ</a>
+                </div>
+
+                <div class="nav-actions">
+                    <a href="login.html" class="btn btn-outline">Masuk</a>
+                    <a href="register.html" class="btn btn-primary">Daftar Gratis</a>
+                </div>
+
+                <button class="mobile-toggle" id="mobileToggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <div class="badge">
+                        <i class="fas fa-star"></i>
+                        <span>Platform WhatsApp API Terpercaya</span>
+                    </div>
+                    <h1 class="hero-title">
+                        WhatsApp API Gateway
+                        <span class="gradient-text">Indonesia</span>
+                    </h1>
+                    <p class="hero-description">
+                        Kirim notifikasi, pesan broadcast, bot otomatis, dan reminder melalui WhatsApp dengan mudah.
+                        Integrasikan bisnis Anda dengan API yang powerful dan mudah digunakan.
+                    </p>
+                    <div class="hero-buttons">
+                        <a href="register.html" class="btn btn-primary btn-lg">
+                            <span>Mulai Gratis</span>
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                        <a href="#documentation" class="btn btn-glass btn-lg">
+                            <i class="fas fa-book"></i>
+                            <span>Dokumentasi</span>
+                        </a>
+                    </div>
+                    <div class="hero-stats">
+                        <div class="stat-item">
+                            <div class="stat-number">50K+</div>
+                            <div class="stat-label">Pengguna Aktif</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">10M+</div>
+                            <div class="stat-label">Pesan Terkirim</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">99.9%</div>
+                            <div class="stat-label">Uptime</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="hero-visual">
+                    <div class="phone-mockup">
+                        <div class="phone-frame">
+                            <div class="phone-screen">
+                                <div class="chat-interface">
+                                    <div class="chat-header">
+                                        <div class="chat-avatar"></div>
+                                        <div class="chat-info">
+                                            <div class="chat-name">WA Gateway Bot</div>
+                                            <div class="chat-status">Online</div>
+                                        </div>
+                                    </div>
+                                    <div class="chat-messages">
+                                        <div class="message received">
+                                            <div class="message-bubble">
+                                                Halo! Selamat datang di WA Gateway 👋
+                                            </div>
+                                        </div>
+                                        <div class="message sent">
+                                            <div class="message-bubble">
+                                                Test API berhasil!
+                                            </div>
+                                        </div>
+                                        <div class="message received">
+                                            <div class="message-bubble">
+                                                Pesan Anda telah terkirim dengan sukses ✅
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="floating-card card-1">
+                        <i class="fas fa-check-circle"></i>
+                        <span>API Ready</span>
+                    </div>
+                    <div class="floating-card card-2">
+                        <i class="fas fa-bolt"></i>
+                        <span>Fast Delivery</span>
+                    </div>
+                    <div class="floating-card card-3">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Secure</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-badge">Fitur Lengkap</div>
+                <h2 class="section-title">Semua yang Anda Butuhkan</h2>
+                <p class="section-description">
+                    Platform lengkap dengan berbagai fitur untuk memaksimalkan komunikasi bisnis Anda
+                </p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-paper-plane"></i>
+                    </div>
+                    <h3 class="feature-title">Kirim Pesan</h3>
+                    <p class="feature-description">
+                        Kirim pesan single, broadcast, atau schedule dengan mudah
+                    </p>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check"></i> Single Message</li>
+                        <li><i class="fas fa-check"></i> Broadcast</li>
+                        <li><i class="fas fa-check"></i> Schedule</li>
+                        <li><i class="fas fa-check"></i> Variable Support</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card featured">
+                    <div class="feature-badge">Popular</div>
+                    <div class="feature-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h3 class="feature-title">Auto Reply Bot</h3>
+                    <p class="feature-description">
+                        Bot otomatis dengan keyword-based dan quick reply
+                    </p>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check"></i> Keyword Based</li>
+                        <li><i class="fas fa-check"></i> Quick Reply</li>
+                        <li><i class="fas fa-check"></i> Default Message</li>
+                        <li><i class="fas fa-check"></i> Webhook Support</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <h3 class="feature-title">Rich Media</h3>
+                    <p class="feature-description">
+                        Kirim gambar, video, dokumen, dan lokasi
+                    </p>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check"></i> Image & Video</li>
+                        <li><i class="fas fa-check"></i> Documents</li>
+                        <li><i class="fas fa-check"></i> Location</li>
+                        <li><i class="fas fa-check"></i> Audio Files</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3 class="feature-title">Dashboard</h3>
+                    <p class="feature-description">
+                        Kelola semua pesan dan device dalam satu dashboard
+                    </p>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check"></i> Device Management</li>
+                        <li><i class="fas fa-check"></i> Contact Management</li>
+                        <li><i class="fas fa-check"></i> Message History</li>
+                        <li><i class="fas fa-check"></i> Analytics</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-code"></i>
+                    </div>
+                    <h3 class="feature-title">Simple API</h3>
+                    <p class="feature-description">
+                        Dokumentasi lengkap dan mudah diintegrasikan
+                    </p>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check"></i> RESTful API</li>
+                        <li><i class="fas fa-check"></i> Clear Documentation</li>
+                        <li><i class="fas fa-check"></i> Code Examples</li>
+                        <li><i class="fas fa-check"></i> Webhook Events</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-plug"></i>
+                    </div>
+                    <h3 class="feature-title">Integrasi</h3>
+                    <p class="feature-description">
+                        Mudah diintegrasikan dengan platform favorit Anda
+                    </p>
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check"></i> WordPress</li>
+                        <li><i class="fas fa-check"></i> WooCommerce</li>
+                        <li><i class="fas fa-check"></i> Google Forms</li>
+                        <li><i class="fas fa-check"></i> Contact Form 7</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="pricing" id="pricing">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-badge">Harga Terjangkau</div>
+                <h2 class="section-title">Pilih Paket yang Sesuai</h2>
+                <p class="section-description">
+                    Mulai dari gratis hingga enterprise, kami punya paket untuk semua kebutuhan
+                </p>
+            </div>
+
+            <div class="pricing-toggle">
+                <button class="toggle-btn active" data-plan="text">Text Only</button>
+                <button class="toggle-btn" data-plan="all">All Features</button>
+            </div>
+
+            <div class="pricing-grid" id="pricingGrid">
+                <!-- Text Only Plans -->
+                <div class="pricing-card text-plan">
+                    <div class="pricing-header">
+                        <h3 class="pricing-name">Free</h3>
+                        <div class="pricing-price">
+                            <span class="price">Rp 0</span>
+                            <span class="period">/bulan</span>
+                        </div>
+                    </div>
+                    <ul class="pricing-features">
+                        <li><i class="fas fa-check"></i> 50 Pesan/hari</li>
+                        <li><i class="fas fa-check"></i> 1 Device</li>
+                        <li><i class="fas fa-check"></i> Text Only</li>
+                        <li><i class="fas fa-check"></i> Basic Support</li>
+                        <li class="disabled"><i class="fas fa-times"></i> Auto Reply</li>
+                        <li class="disabled"><i class="fas fa-times"></i> Webhook</li>
+                    </ul>
+                    <a href="register.html" class="btn btn-outline btn-block">Coba Gratis</a>
+                </div>
+
+                <div class="pricing-card text-plan">
+                    <div class="pricing-header">
+                        <h3 class="pricing-name">Lite</h3>
+                        <div class="pricing-price">
+                            <span class="price">Rp 25K</span>
+                            <span class="period">/bulan</span>
+                        </div>
+                    </div>
+                    <ul class="pricing-features">
+                        <li><i class="fas fa-check"></i> 500 Pesan/hari</li>
+                        <li><i class="fas fa-check"></i> 2 Device</li>
+                        <li><i class="fas fa-check"></i> Text Only</li>
+                        <li><i class="fas fa-check"></i> Email Support</li>
+                        <li><i class="fas fa-check"></i> Auto Reply</li>
+                        <li class="disabled"><i class="fas fa-times"></i> Webhook</li>
+                    </ul>
+                    <a href="register.html" class="btn btn-outline btn-block">Pilih Paket</a>
+                </div>
+
+                <div class="pricing-card text-plan popular">
+                    <div class="pricing-badge">Populer</div>
+                    <div class="pricing-header">
+                        <h3 class="pricing-name">Regular</h3>
+                        <div class="pricing-price">
+                            <span class="price">Rp 66K</span>
+                            <span class="period">/bulan</span>
+                        </div>
+                    </div>
+                    <ul class="pricing-features">
+                        <li><i class="fas fa-check"></i> 2000 Pesan/hari</li>
+                        <li><i class="fas fa-check"></i> 3 Device</li>
+                        <li><i class="fas fa-check"></i> Text Only</li>
+                        <li><i class="fas fa-check"></i> Priority Support</li>
+                        <li><i class="fas fa-check"></i> Auto Reply</li>
+                        <li><i class="fas fa-check"></i> Webhook</li>
+                    </ul>
+                    <a href="register.html" class="btn btn-primary btn-block">Pilih Paket</a>
+                </div>
+
+                <div class="pricing-card text-plan">
+                    <div class="pricing-header">
+                        <h3 class="pricing-name">Master</h3>
+                        <div class="pricing-price">
+                            <span class="price">Rp 175K</span>
+                            <span class="period">/bulan</span>
+                        </div>
+                    </div>
+                    <ul class="pricing-features">
+                        <li><i class="fas fa-check"></i> Unlimited Pesan</li>
+                        <li><i class="fas fa-check"></i> 10 Device</li>
+                        <li><i class="fas fa-check"></i> Text Only</li>
+                        <li><i class="fas fa-check"></i> 24/7 Support</li>
+                        <li><i class="fas fa-check"></i> Auto Reply</li>
+                        <li><i class="fas fa-check"></i> Webhook</li>
+                    </ul>
+                    <a href="register.html" class="btn btn-outline btn-block">Pilih Paket</a>
+                </div>
+
+                <!-- All Features Plans -->
+                <div class="pricing-card all-plan" style="display: none;">
+                    <div class="pricing-header">
+                        <h3 class="pricing-name">Super</h3>
+                        <div class="pricing-price">
+                            <span class="price">Rp 165K</span>
+                            <span class="period">/bulan</span>
+                        </div>
+                    </div>
+                    <ul class="pricing-features">
+                        <li><i class="fas fa-check"></i> 5000 Pesan/hari</li>
+                        <li><i class="fas fa-check"></i> 3 Device</li>
+                        <li><i class="fas fa-check"></i> All Media Types</li>
+                        <li><i class="fas fa-check"></i> Priority Support</li>
+                        <li><i class="fas fa-check"></i> Auto Reply</li>
+                        <li><i class="fas fa-check"></i> Webhook</li>
+                    </ul>
+                    <a href="register.html" class="btn btn-outline btn-block">Pilih Paket</a>
+                </div>
+
+                <div class="pricing-card all-plan popular" style="display: none;">
+                    <div class="pricing-badge">Populer</div>
+                    <div class="pricing-header">
+                        <h3 class="pricing-name">Advanced</h3>
+                        <div class="pricing-price">
+                            <span class="price">Rp 255K</span>
+                            <span class="period">/bulan</span>
+                        </div>
+                    </div>
+                    <ul class="pricing-features">
+                        <li><i class="fas fa-check"></i> 15000 Pesan/hari</li>
+                        <li><i class="fas fa-check"></i> 5 Device</li>
+                        <li><i class="fas fa-check"></i> All Media Types</li>
+                        <li><i class="fas fa-check"></i> 24/7 Support</li>
+                        <li><i class="fas fa-check"></i> Auto Reply Pro</li>
+                        <li><i class="fas fa-check"></i> Advanced Webhook</li>
+                    </ul>
+                    <a href="register.html" class="btn btn-primary btn-block">Pilih Paket</a>
+                </div>
+
+                <div class="pricing-card all-plan" style="display: none;">
+                    <div class="pricing-header">
+                        <h3 class="pricing-name">Ultra</h3>
+                        <div class="pricing-price">
+                            <span class="price">Rp 355K</span>
+                            <span class="period">/bulan</span>
+                        </div>
+                    </div>
+                    <ul class="pricing-features">
+                        <li><i class="fas fa-check"></i> Unlimited Pesan</li>
+                        <li><i class="fas fa-check"></i> 10 Device</li>
+                        <li><i class="fas fa-check"></i> All Media Types</li>
+                        <li><i class="fas fa-check"></i> Dedicated Support</li>
+                        <li><i class="fas fa-check"></i> Auto Reply Pro</li>
+                        <li><i class="fas fa-check"></i> Custom Features</li>
+                    </ul>
+                    <a href="register.html" class="btn btn-outline btn-block">Pilih Paket</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Documentation Section -->
+    <section class="documentation" id="documentation">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-badge">Dokumentasi</div>
+                <h2 class="section-title">Mudah Diintegrasikan</h2>
+                <p class="section-description">
+                    Mulai kirim pesan dalam hitungan menit dengan dokumentasi yang jelas
+                </p>
+            </div>
+
+            <div class="doc-content">
+                <div class="doc-tabs">
+                    <button class="doc-tab active" data-lang="php">
+                        <i class="fab fa-php"></i>
+                        PHP
+                    </button>
+                    <button class="doc-tab" data-lang="javascript">
+                        <i class="fab fa-js"></i>
+                        JavaScript
+                    </button>
+                    <button class="doc-tab" data-lang="python">
+                        <i class="fab fa-python"></i>
+                        Python
+                    </button>
+                    <button class="doc-tab" data-lang="curl">
+                        <i class="fas fa-terminal"></i>
+                        cURL
+                    </button>
+                </div>
+
+                <div class="code-examples">
+                    <div class="code-example active" data-lang="php">
+                        <div class="code-header">
+                            <span>send_message.php</span>
+                            <button class="copy-btn" onclick="copyCode(this)">
+                                <i class="fas fa-copy"></i>
+                                Copy
+                            </button>
+                        </div>
+                        <pre><code>&lt;?php
+$curl = curl_init();
+
+curl_setopt_array($curl, array(
+  CURLOPT_URL =&gt; 'http://localhost:5000/api/send',
+  CURLOPT_RETURNTRANSFER =&gt; true,
+  CURLOPT_ENCODING =&gt; '',
+  CURLOPT_MAXREDIRS =&gt; 10,
+  CURLOPT_TIMEOUT =&gt; 0,
+  CURLOPT_FOLLOWLOCATION =&gt; true,
+  CURLOPT_HTTP_VERSION =&gt; CURL_HTTP_VERSION_1_1,
+  CURLOPT_CUSTOMREQUEST =&gt; 'POST',
+  CURLOPT_POSTFIELDS =&gt; json_encode(array(
+    'recipient' =&gt; '6281234567890',
+    'message' =&gt; 'Halo dari WA Gateway!'
+  )),
+  CURLOPT_HTTPHEADER =&gt; array(
+    'X-API-Key: YOUR_DEVICE_API_TOKEN',
+    'Content-Type: application/json'
+  ),
+));
+
+$response = curl_exec($curl);
+curl_close($curl);
+
+echo $response;
+?&gt;</code></pre>
+                    </div>
+
+                    <div class="code-example" data-lang="javascript">
+                        <div class="code-header">
+                            <span>sendMessage.js</span>
+                            <button class="copy-btn" onclick="copyCode(this)">
+                                <i class="fas fa-copy"></i>
+                                Copy
+                            </button>
+                        </div>
+                        <pre><code>const axios = require('axios');
+
+const sendMessage = async () => {
+  try {
+    const response = await axios.post(
+      'https://api.wagateway.com/send',
+      {
+        target: '6281234567890',
+        message: 'Halo dari WA Gateway!'
+      },
+      {
+        headers: {
+          'Authorization': 'YOUR_API_TOKEN'
+        }
+      }
+    );
+    
+    console.log(response.data);
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+sendMessage();</code></pre>
+                    </div>
+
+                    <div class="code-example" data-lang="python">
+                        <div class="code-header">
+                            <span>send_message.py</span>
+                            <button class="copy-btn" onclick="copyCode(this)">
+                                <i class="fas fa-copy"></i>
+                                Copy
+                            </button>
+                        </div>
+                        <pre><code>import requests
+import json
+
+url = "http://localhost:5000/api/send"
+
+payload = {
+    'recipient': '6281234567890',
+    'message': 'Halo dari WA Gateway!'
+}
+headers = {
+    'X-API-Key': 'YOUR_DEVICE_API_TOKEN',
+    'Content-Type': 'application/json'
+}
+
+response = requests.post(url, json=payload, headers=headers)
+
+print(response.text)</code></pre>
+                    </div>
+
+                    <div class="code-example" data-lang="curl">
+                        <div class="code-header">
+                            <span>Terminal</span>
+                            <button class="copy-btn" onclick="copyCode(this)">
+                                <i class="fas fa-copy"></i>
+                                Copy
+                            </button>
+                        </div>
+                        <pre><code>curl --location --request POST 'https://api.wagateway.com/send' \
+--header 'Authorization: YOUR_API_TOKEN' \
+--form 'target="6281234567890"' \
+--form 'message="Halo dari WA Gateway!"'</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="faq" id="faq">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-badge">FAQ</div>
+                <h2 class="section-title">Pertanyaan Umum</h2>
+                <p class="section-description">
+                    Temukan jawaban untuk pertanyaan yang sering ditanyakan
+                </p>
+            </div>
+
+            <div class="faq-grid">
+                <div class="faq-item">
+                    <button class="faq-question">
+                        <span>Apa itu WA Gateway?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <p>WA Gateway adalah platform API WhatsApp yang memungkinkan Anda mengirim pesan, notifikasi,
+                            dan membuat bot otomatis melalui WhatsApp dengan mudah. Platform kami menyediakan berbagai
+                            fitur untuk memaksimalkan komunikasi bisnis Anda.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <button class="faq-question">
+                        <span>Apakah ada paket gratis?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Ya! Kami menyediakan paket gratis dengan limit 50 pesan per hari. Paket ini cocok untuk Anda
+                            yang ingin mencoba layanan kami sebelum upgrade ke paket berbayar.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <button class="faq-question">
+                        <span>Bagaimana cara mendapatkan API token?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Setelah mendaftar dan login ke dashboard, Anda bisa mendapatkan API token di halaman Device
+                            Management. Token ini digunakan untuk autentikasi setiap request API.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <button class="faq-question">
+                        <span>Apakah bisa kirim gambar dan video?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Ya, pada paket All Features Anda bisa mengirim berbagai jenis media seperti gambar, video,
+                            dokumen, audio, dan lokasi.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <button class="faq-question">
+                        <span>Apakah data saya aman?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Keamanan data adalah prioritas kami. Semua komunikasi menggunakan enkripsi SSL/TLS dan data
+                            Anda disimpan dengan aman di server yang terlindungi.</p>
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <button class="faq-question">
+                        <span>Bagaimana cara upgrade paket?</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="faq-answer">
+                        <p>Anda bisa upgrade paket kapan saja melalui dashboard. Sisa kuota dari paket sebelumnya akan
+                            tetap tersimpan dan dapat digunakan.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="container">
+            <div class="cta-content">
+                <div class="cta-text">
+                    <h2 class="cta-title">Siap Memulai?</h2>
+                    <p class="cta-description">
+                        Bergabunglah dengan ribuan bisnis yang sudah menggunakan WA Gateway untuk meningkatkan
+                        komunikasi mereka
+                    </p>
+                </div>
+                <div class="cta-buttons">
+                    <a href="register.html" class="btn btn-primary btn-lg">
+                        <span>Daftar Gratis Sekarang</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <div class="footer-logo">
+                        <i class="fab fa-whatsapp"></i>
+                        <span>WA<span class="highlight">Gateway</span></span>
+                    </div>
+                    <p class="footer-description">
+                        Platform WhatsApp API terpercaya untuk bisnis Indonesia. Kirim pesan, notifikasi, dan bot
+                        otomatis dengan mudah.
+                    </p>
+                    <div class="social-links">
+                        <a href="#" class="social-link"><i class="fab fa-facebook"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="social-link"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+
+                <div class="footer-column">
+                    <h3 class="footer-title">Produk</h3>
+                    <ul class="footer-links">
+                        <li><a href="#features">Fitur</a></li>
+                        <li><a href="#pricing">Harga</a></li>
+                        <li><a href="#documentation">Dokumentasi</a></li>
+                        <li><a href="#">API Reference</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-column">
+                    <h3 class="footer-title">Perusahaan</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Tentang Kami</a></li>
+                        <li><a href="#">Blog</a></li>
+                        <li><a href="#">Karir</a></li>
+                        <li><a href="#">Kontak</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-column">
+                    <h3 class="footer-title">Dukungan</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Pusat Bantuan</a></li>
+                        <li><a href="#faq">FAQ</a></li>
+                        <li><a href="#">Status</a></li>
+                        <li><a href="#">Hubungi Kami</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-column">
+                    <h3 class="footer-title">Legal</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Syarat & Ketentuan</a></li>
+                        <li><a href="#">Kebijakan Privasi</a></li>
+                        <li><a href="#">Kebijakan Cookie</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p>&copy; 2024 WA Gateway. All rights reserved.</p>
+                <p>Made with <i class="fas fa-heart"></i> in Indonesia</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+
+</html>

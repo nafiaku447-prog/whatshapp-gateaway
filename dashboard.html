@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - WA Gateway</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+
+    <!-- Main Styles -->
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+</head>
+
+<body>
+    <!-- Gradient Background -->
+    <div class="gradient-bg"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <i class="fab fa-whatsapp"></i>
+                <span>WA<span class="highlight">Gateway</span></span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-item">
+                <a href="dashboard.html" class="nav-link active">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="devices.html" class="nav-link">
+                    <i class="fas fa-mobile-alt"></i>
+                    <span>Devices</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="messages.html" class="nav-link">
+                    <i class="fas fa-paper-plane"></i>
+                    <span>Messages</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="contacts.html" class="nav-link">
+                    <i class="fas fa-address-book"></i>
+                    <span>Contacts</span>
+                </a>
+            </div>
+
+            <div class="nav-section">Automation</div>
+
+            <div class="nav-item">
+                <a href="auto-reply.html" class="nav-link">
+                    <i class="fas fa-robot"></i>
+                    <span>Auto Reply</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="webhooks.html" class="nav-link">
+                    <i class="fas fa-webhook"></i>
+                    <span>Webhooks</span>
+                </a>
+            </div>
+
+            <div class="nav-section">Account</div>
+
+            <div class="nav-item">
+                <a href="subscription.html" class="nav-link">
+                    <i class="fas fa-crown"></i>
+                    <span>Subscription</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="settings.html" class="nav-link">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar"></div>
+                <div class="user-details">
+                    <div class="user-name" id="userName">Loading...</div>
+                    <div class="user-email" id="userEmail">Loading...</div>
+                </div>
+                <button class="logout-btn" onclick="logout()" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Inline script to load avatar instantly from cache -->
+        <script>
+            (function () {
+                try {
+                    const cachedUser = localStorage.getItem('user');
+                    if (cachedUser) {
+                        const user = JSON.parse(cachedUser);
+                        const avatarEl = document.getElementById('userAvatar');
+                        if (avatarEl && user.profilePicture) {
+                            avatarEl.textContent = ''; // Clear text first!
+                            avatarEl.style.backgroundImage = `url("${user.profilePicture}")`;
+                            avatarEl.style.backgroundSize = 'cover';
+                            avatarEl.style.backgroundPosition = 'center';
+                        } else if (avatarEl && user.firstName) {
+                            avatarEl.style.backgroundImage = 'none';
+                            avatarEl.textContent = user.firstName.charAt(0).toUpperCase();
+                        }
+                    }
+                } catch (e) { }
+            })();
+        </script>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="header-content">
+                <div>
+                    <h1 class="page-title" data-i18n="dashboard.title">Dashboard</h1>
+                    <p class="page-subtitle" data-i18n="dashboard.subtitle">Welcome back! Here's what's happening with
+                        your WhatsApp gateway today.</p>
+                </div>
+                <button class="lang-switcher" onclick="toggleLanguage()" title="Change Language">
+                    <i class="fas fa-globe"></i>
+                    <span id="currentLang">EN</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon primary">
+                        <i class="fas fa-paper-plane"></i>
+                    </div>
+                    <div class="stat-trend up">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>12%</span>
+                    </div>
+                </div>
+                <div class="stat-value" id="totalMessages">0</div>
+                <div class="stat-label">Total Messages Sent</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon success">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <div class="stat-trend up">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>3</span>
+                    </div>
+                </div>
+                <div class="stat-value" id="activeDevices">0</div>
+                <div class="stat-label">Active Devices</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon warning">
+                        <i class="fas fa-address-book"></i>
+                    </div>
+                    <div class="stat-trend up">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>8%</span>
+                    </div>
+                </div>
+                <div class="stat-value" id="totalContacts">0</div>
+                <div class="stat-label">Total Contacts</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon info">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <div class="stat-trend up">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>95%</span>
+                    </div>
+                </div>
+                <div class="stat-value">95%</div>
+                <div class="stat-label">Delivery Rate</div>
+            </div>
+        </div>
+
+        <!-- Content Grid -->
+        <div class="content-grid">
+            <!-- Recent Activity -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Recent Activity</h2>
+                    <a href="messages.html" class="card-action">View All</a>
+                </div>
+                <div class="activity-list" id="activityList">
+                    <!-- Will be populated by JavaScript -->
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <i class="fas fa-paper-plane"></i>
+                        </div>
+                        <h3>No Activity Yet</h3>
+                        <p>Get started by sending your first WhatsApp message.<br>Your activity will appear here.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Quick Actions</h2>
+                </div>
+                <div class="quick-actions">
+                    <a href="devices.html" class="action-btn">
+                        <div class="action-icon">
+                            <i class="fas fa-plus-circle"></i>
+                        </div>
+                        <span>Add Device</span>
+                    </a>
+                    <a href="messages.html" class="action-btn">
+                        <div class="action-icon">
+                            <i class="fas fa-paper-plane"></i>
+                        </div>
+                        <span>Send Message</span>
+                    </a>
+                    <a href="contacts.html" class="action-btn">
+                        <div class="action-icon">
+                            <i class="fas fa-user-plus"></i>
+                        </div>
+                        <span>Add Contact</span>
+                    </a>
+                    <a href="auto-reply.html" class="action-btn">
+                        <div class="action-icon">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <span>Setup Bot</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Logout Confirmation Modal -->
+    <div class="modal-overlay" id="logoutModal">
+        <div class="modal-content">
+            <div class="modal-icon">
+                <i class="fas fa-sign-out-alt"></i>
+            </div>
+            <h3 class="modal-title">Logout Confirmation</h3>
+            <p class="modal-description">Are you sure you want to logout? You'll need to login again to access the
+                dashboard.</p>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeLogoutModal()">
+                    <i class="fas fa-times"></i>
+                    <span>Cancel</span>
+                </button>
+                <button class="btn btn-primary" onclick="confirmLogout()">
+                    <i class="fas fa-check"></i>
+                    <span>Yes, Logout</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Menu Toggle -->
+    <button class="menu-toggle" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- i18n Translations -->
+    <script src="js/i18n.js"></script>
+
+    <!-- API Service -->
+    <script src="js/api.js"></script>
+
+    <script>
+        // Protect route - redirect to login if not authenticated
+        requireAuth();
+
+        // Load user data
+        async function loadUserData() {
+            try {
+                const user = AuthAPI.getStoredUser();
+                if (user) {
+                    // Only update name and email - avatar is handled by requireAuth() and inline script
+                    document.getElementById('userName').textContent = `${user.firstName} ${user.lastName}`;
+                    document.getElementById('userEmail').textContent = user.email;
+                }
+            } catch (error) {
+                console.error('Error loading user data:', error);
+            }
+        }
+
+        // Load dashboard statistics
+        async function loadStats() {
+            try {
+                const stats = await StatsAPI.getDashboard();
+
+                if (stats) {
+                    document.getElementById('totalMessages').textContent = stats.totalMessages || 0;
+                    document.getElementById('activeDevices').textContent = stats.activeDevices || 0;
+                    document.getElementById('totalContacts').textContent = stats.totalContacts || 0;
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+                document.getElementById('totalMessages').textContent = '0';
+                document.getElementById('activeDevices').textContent = '0';
+                document.getElementById('totalContacts').textContent = '0';
+            }
+        }
+
+        // Load recent activity
+        async function loadActivity() {
+            try {
+                const messages = await MessagesAPI.getHistory();
+
+                const activityList = document.getElementById('activityList');
+
+                if (messages && messages.length > 0) {
+                    activityList.innerHTML = messages.slice(0, 5).map(msg => `
+                        <div class="activity-item">
+                            <div class="activity-icon ${msg.status === 'sent' ? 'sent' : 'failed'}">
+                                <i class="fas fa-${msg.status === 'sent' ? 'check-circle' : 'times-circle'}"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-title">Message ${msg.status}</div>
+                                <div class="activity-description">To ${msg.recipient_phone}</div>
+                            </div>
+                            <div class="activity-time">${formatTimeAgo(msg.created_at)}</div>
+                        </div>
+                    `).join('');
+                } else {
+                    activityList.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">
+                                <i class="fas fa-paper-plane"></i>
+                            </div>
+                            <h3>No Activity Yet</h3>
+                            <p>Get started by sending your first WhatsApp message.<br>Your activity will appear here.</p>
+                            <a href="messages.html" class="btn btn-primary">
+                                <i class="fas fa-rocket"></i>
+                                <span>Send Your First Message</span>
+                            </a>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading activity:', error);
+            }
+        }
+
+        // Format time ago
+        function formatTimeAgo(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const seconds = Math.floor((now - date) / 1000);
+
+            if (seconds < 60) return 'Just now';
+            const minutes = Math.floor(seconds / 60);
+            if (minutes < 60) return `${minutes}m ago`;
+            const hours = Math.floor(minutes / 60);
+            if (hours < 24) return `${hours}h ago`;
+            const days = Math.floor(hours / 24);
+            return `${days}d ago`;
+        }
+
+        // Logout function - Show modal
+        function logout() {
+            const modal = document.getElementById('logoutModal');
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Prevent scrolling
+        }
+
+        // Close logout modal
+        function closeLogoutModal() {
+            const modal = document.getElementById('logoutModal');
+            modal.classList.remove('active');
+            document.body.style.overflow = ''; // Re-enable scrolling
+        }
+
+        // Confirm logout - AJAX
+        async function confirmLogout() {
+            const modal = document.getElementById('logoutModal');
+            const confirmBtn = modal.querySelector('.btn-primary');
+
+            // Show loading state
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Logging out...</span>';
+
+            try {
+                // Simulate API call delay (you can add actual API call here if needed)
+                await new Promise(resolve => setTimeout(resolve, 800));
+
+                // Clear local storage
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+
+                // Show success feedback
+                confirmBtn.innerHTML = '<i class="fas fa-check-circle"></i><span>Logged out!</span>';
+
+                // Redirect after short delay
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 500);
+
+            } catch (error) {
+                console.error('Logout error:', error);
+
+                // Show error
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = '<i class="fas fa-exclamation-c ircle"></i><span>Error! Try again</span>';
+
+                setTimeout(() => {
+                    confirmBtn.innerHTML = '<i class="fas fa-check"></i><span>Yes, Logout</span>';
+                }, 2000);
+            }
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('logoutModal').addEventListener('click', function (e) {
+            if (e.target === this) {
+                closeLogoutModal();
+            }
+        });
+
+        // Close modal with ESC key
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') {
+                closeLogoutModal();
+            }
+        });
+
+        // Toggle sidebar for mobile
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+        }
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', () => {
+            loadUserData();
+            loadStats();
+            loadActivity();
+
+            // Refresh stats every 30 seconds
+            setInterval(loadStats, 30000);
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webhooks - WA Gateway</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/device.css">
+    <link rel="stylesheet" href="css/automation.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+
+<body>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <i class="fab fa-whatsapp"></i>
+                <span>WA<span class="highlight">Gateway</span></span>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-item"><a href="dashboard.html" class="nav-link"><i class="fas fa-home"></i>
+                    <span>Dashboard</span></a></div>
+            <div class="nav-item"><a href="devices.html" class="nav-link"><i class="fas fa-mobile-alt"></i>
+                    <span>Devices</span></a></div>
+            <div class="nav-item"><a href="messages.html" class="nav-link"><i class="fas fa-paper-plane"></i>
+                    <span>Messages</span></a></div>
+            <div class="nav-item"><a href="contacts.html" class="nav-link"><i class="fas fa-address-book"></i>
+                    <span>Contacts</span></a></div>
+            <div class="nav-section">AUTOMATION</div>
+            <div class="nav-item"><a href="auto-reply.html" class="nav-link"><i class="fas fa-robot"></i> <span>Auto
+                        Reply</span></a></div>
+            <div class="nav-item"><a href="webhooks.html" class="nav-link active"><i class="fas fa-webhook"></i>
+                    <span>Webhooks</span></a></div>
+            <div class="nav-section">ACCOUNT</div>
+            <div class="nav-item"><a href="subscription.html" class="nav-link"><i class="fas fa-crown"></i>
+                    <span>Subscription</span></a></div>
+            <div class="nav-item"><a href="settings.html" class="nav-link"><i class="fas fa-cog"></i>
+                    <span>Settings</span></a></div>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar"></div>
+                <div class="user-details">
+                    <div class="user-name" id="userName">User</div>
+                    <div class="user-email" id="userEmail">user@email.com</div>
+                </div>
+                <button class="logout-btn" onclick="confirmLogout()"><i class="fas fa-sign-out-alt"></i></button>
+            </div>
+        </div>
+
+        <!-- Inline script to load avatar instantly from cache -->
+        <script>
+            (function () {
+                try {
+                    const cachedUser = localStorage.getItem('user');
+                    if (cachedUser) {
+                        const user = JSON.parse(cachedUser);
+                        const avatarEl = document.getElementById('userAvatar');
+                        if (avatarEl && user.profilePicture) {
+                            avatarEl.textContent = '';
+                            avatarEl.style.backgroundImage = `url("${user.profilePicture}")`;
+                            avatarEl.style.backgroundSize = 'cover';
+                            avatarEl.style.backgroundPosition = 'center';
+                        } else if (avatarEl && user.firstName) {
+                            avatarEl.style.backgroundImage = 'none';
+                            avatarEl.textContent = user.firstName.charAt(0).toUpperCase();
+                        }
+                    }
+                } catch (e) { }
+            })();
+        </script>
+    </aside>
+
+    <main class="main-content">
+        <div class="page-header">
+            <div class="header-content">
+                <div>
+                    <h1 class="page-title">Webhooks</h1>
+                    <p class="page-subtitle">Integrasi dengan aplikasi pihak ketiga</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="alertContainer"></div>
+
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: var(--spacing-lg);">
+            <!-- Configuration -->
+            <div>
+                <div class="rule-card" style="cursor: default; transform: none; box-shadow: none;">
+                    <div class="rule-header">
+                        <h3 style="margin:0; font-size:1.1rem;">Konfigurasi Webhook</h3>
+                        <label class="switch">
+                            <input type="checkbox" id="webhookActive" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <p style="color:var(--gray-600); font-size:0.9rem; margin-bottom:1.5rem;">
+                        Kami akan mengirimkan HTTP POST request ke URL ini setiap kali ada pesan masuk atau perubahan
+                        status.
+                    </p>
+
+                    <form id="webhookForm">
+                        <div class="form-group">
+                            <label class="form-label">Webhook URL</label>
+                            <input type="url" id="webhookUrl" class="form-input"
+                                placeholder="https://domain-anda.com/webhook" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Events</label>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                                <label
+                                    style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; color: var(--gray-700);">
+                                    <input type="checkbox" checked> Pesan Masuk
+                                </label>
+                                <label
+                                    style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; color: var(--gray-700);">
+                                    <input type="checkbox" checked> Status Perangkat
+                                </label>
+                                <label
+                                    style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; color: var(--gray-700);">
+                                    <input type="checkbox"> Pesan Terkirim
+                                </label>
+                                <label
+                                    style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; color: var(--gray-700);">
+                                    <input type="checkbox"> Scan QR
+                                </label>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                            <button type="submit" class="btn btn-primary">Simpan Konfigurasi</button>
+                            <button type="button" class="btn btn-outline" onclick="testWebhook()">Test Webhook</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Logs -->
+            <div>
+                <h3 style="margin-bottom: 1rem; font-size: 1.1rem;">Webhook Logs</h3>
+                <div class="webhook-logs" id="webhookLogs">
+                    <div style="text-align:center; padding-top:4rem; color:#555;">Menunggu event...</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/api.js"></script>
+    <script>
+        requireAuth();
+
+        // Mock Logic
+        document.getElementById('webhookForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            showAlert('success', 'Konfigurasi webhook berhasil disimpan');
+        });
+
+        async function testWebhook() {
+            const url = document.getElementById('webhookUrl').value;
+            if (!url) {
+                showAlert('danger', 'Masukkan URL Webhook terlebih dahulu');
+                return;
+            }
+
+            // Simulate Test
+            showAlert('info', 'Mengirim test payload...');
+
+            setTimeout(() => {
+                addLog('POST', 200);
+                showAlert('success', 'Webhook test berhasil (200 OK)');
+            }, 1500);
+        }
+
+        function addLog(method, status) {
+            const logs = document.getElementById('webhookLogs');
+            const now = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.innerHTML = `
+                <div><span class="log-time">[${now}]</span> <span class="log-method">${method}</span></div>
+                <div class="log-status ${status === 200 ? 'success' : 'error'}">Status: ${status} OK</div>
+            `;
+
+            if (logs.innerText.includes('Menunggu event')) logs.innerHTML = '';
+            logs.prepend(logEntry);
+        }
+
+        function showAlert(type, message) {
+            const container = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> <span>${message}</span>`;
+            container.appendChild(alert);
+            setTimeout(() => { alert.style.opacity = '0'; setTimeout(() => alert.remove(), 300); }, 3000);
+        }
+
+        function confirmLogout() {
+            if (confirm('Apakah Anda yakin ingin logout?')) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = 'login.html';
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subscription - WA Gateway</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/device.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        /* Subscription Specific Styles */
+        .pricing-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin: 2rem 0;
+            font-weight: 600;
+        }
+
+        .billing-switch {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background: var(--gray-300);
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .billing-switch.active {
+            background: var(--gradient-primary);
+        }
+
+        .billing-switch::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+
+        .billing-switch.active::after {
+            left: 33px;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .pricing-card {
+            background: var(--white);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid transparent;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .pricing-card.featured {
+            border: 2px solid var(--primary);
+            background: linear-gradient(135deg, rgba(37, 211, 102, 0.05) 0%, rgba(255, 255, 255, 1) 100%);
+        }
+
+        .pricing-card.featured::before {
+            content: 'MOST POPULAR';
+            position: absolute;
+            top: 20px;
+            right: -35px;
+            background: var(--gradient-primary);
+            color: white;
+            padding: 0.25rem 3rem;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            transform: rotate(45deg);
+            box-shadow: 0 4px 10px rgba(37, 211, 102, 0.4);
+        }
+
+        .pricing-card.current {
+            border: 2px solid var(--success);
+        }
+
+        .current-badge {
+            display: inline-block;
+            background: var(--success);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 2rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .plan-name {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--gray-900);
+            margin-bottom: 0.5rem;
+        }
+
+        .plan-description {
+            color: var(--gray-600);
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .plan-price {
+            display: flex;
+            align-items: baseline;
+            margin-bottom: 2rem;
+        }
+
+        .price-currency {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gray-700);
+        }
+
+        .price-amount {
+            font-size: 3.5rem;
+            font-weight: 900;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0 0.25rem;
+        }
+
+        .price-period {
+            font-size: 1rem;
+            color: var(--gray-500);
+        }
+
+        .plan-features {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            margin-bottom: 2rem;
+        }
+
+        .plan-features li {
+            padding: 0.75rem 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            color: var(--gray-700);
+            font-size: 0.9rem;
+        }
+
+        .plan-features li i {
+            color: var(--primary);
+            margin-top: 0.2rem;
+            flex-shrink: 0;
+        }
+
+        .plan-features li.disabled {
+            color: var(--gray-400);
+            text-decoration: line-through;
+        }
+
+        .plan-features li.disabled i {
+            color: var(--gray-300);
+        }
+
+        .plan-button {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 0.75rem;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .plan-button.primary {
+            background: var(--gradient-primary);
+            color: white;
+            box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
+        }
+
+        .plan-button.primary:hover {
+            transform: scale(1.02);
+            box-shadow: 0 6px 20px rgba(37, 211, 102, 0.4);
+        }
+
+        .plan-button.outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .plan-button.outline:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .plan-button.current {
+            background: var(--gray-200);
+            color: var(--gray-600);
+            cursor: default;
+        }
+
+        .plan-button.current:hover {
+            transform: none;
+        }
+
+        .faq-section {
+            margin-top: 4rem;
+            padding: 3rem 0;
+            border-top: 1px solid var(--gray-200);
+        }
+
+        .faq-title {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 2rem;
+            color: var(--gray-900);
+        }
+
+        .faq-grid {
+            display: grid;
+            gap: 1rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .faq-item {
+            background: var(--white);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .faq-item:hover {
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .faq-question {
+            font-weight: 600;
+            color: var(--gray-900);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .faq-answer {
+            color: var(--gray-600);
+            margin-top: 1rem;
+            line-height: 1.6;
+            display: none;
+        }
+
+        .faq-item.active .faq-answer {
+            display: block;
+        }
+
+        .faq-item.active .faq-question i {
+            transform: rotate(180deg);
+        }
+
+        .discount-badge {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-left: 0.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <i class="fab fa-whatsapp"></i>
+                <span>WA<span class="highlight">Gateway</span></span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-item"><a href="dashboard.html" class="nav-link"><i class="fas fa-home"></i>
+                    <span>Dashboard</span></a></div>
+            <div class="nav-item"><a href="devices.html" class="nav-link"><i class="fas fa-mobile-alt"></i>
+                    <span>Devices</span></a></div>
+            <div class="nav-item"><a href="messages.html" class="nav-link"><i class="fas fa-paper-plane"></i>
+                    <span>Messages</span></a></div>
+            <div class="nav-item"><a href="contacts.html" class="nav-link"><i class="fas fa-address-book"></i>
+                    <span>Contacts</span></a></div>
+
+            <div class="nav-section">AUTOMATION</div>
+            <div class="nav-item"><a href="auto-reply.html" class="nav-link"><i class="fas fa-robot"></i> <span>Auto
+                        Reply</span></a></div>
+            <div class="nav-item"><a href="webhooks.html" class="nav-link"><i class="fas fa-webhook"></i>
+                    <span>Webhooks</span></a></div>
+
+            <div class="nav-section">ACCOUNT</div>
+            <div class="nav-item"><a href="subscription.html" class="nav-link active"><i class="fas fa-crown"></i>
+                    <span>Subscription</span></a></div>
+            <div class="nav-item"><a href="settings.html" class="nav-link"><i class="fas fa-cog"></i>
+                    <span>Settings</span></a></div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar"></div>
+                <div class="user-details">
+                    <div class="user-name" id="userName">User</div>
+                    <div class="user-email" id="userEmail">user@email.com</div>
+                </div>
+                <button class="logout-btn" onclick="confirmLogout()"><i class="fas fa-sign-out-alt"></i></button>
+            </div>
+        </div>
+
+        <!-- Inline script to load avatar instantly from cache -->
+        <script>
+            (function () {
+                try {
+                    const cachedUser = localStorage.getItem('user');
+                    if (cachedUser) {
+                        const user = JSON.parse(cachedUser);
+                        const avatarEl = document.getElementById('userAvatar');
+                        if (avatarEl && user.profilePicture) {
+                            avatarEl.textContent = '';
+                            avatarEl.style.backgroundImage = `url("${user.profilePicture}")`;
+                            avatarEl.style.backgroundSize = 'cover';
+                            avatarEl.style.backgroundPosition = 'center';
+                        } else if (avatarEl && user.firstName) {
+                            avatarEl.style.backgroundImage = 'none';
+                            avatarEl.textContent = user.firstName.charAt(0).toUpperCase();
+                        }
+                    }
+                } catch (e) { }
+            })();
+        </script>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="page-header">
+            <div class="header-content">
+                <div>
+                    <h1 class="page-title">Subscription Plans</h1>
+                    <p class="page-subtitle">Choose the perfect plan for your business needs</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="alertContainer"></div>
+
+        <!-- Billing Toggle -->
+        <div class="pricing-toggle">
+            <span id="monthlyLabel" style="color: var(--gray-900)">Monthly</span>
+            <div class="billing-switch" id="billingSwitch" onclick="toggleBilling()"></div>
+            <span id="yearlyLabel" style="color: var(--gray-500)">Yearly <span class="discount-badge">-20%</span></span>
+        </div>
+
+        <!-- Pricing Cards -->
+        <div class="pricing-grid">
+            <!-- Free Plan -->
+            <div class="pricing-card" id="plan-free">
+                <div class="plan-name">Free</div>
+                <div class="plan-description">Perfect for trying out our service</div>
+                <div class="plan-price">
+                    <span class="price-currency">Rp</span>
+                    <span class="price-amount">0</span>
+                    <span class="price-period">/month</span>
+                </div>
+                <ul class="plan-features">
+                    <li><i class="fas fa-check-circle"></i> 1 Device</li>
+                    <li><i class="fas fa-check-circle"></i> 100 Messages/day</li>
+                    <li><i class="fas fa-check-circle"></i> Basic Support</li>
+                    <li class="disabled"><i class="fas fa-times-circle"></i> Auto Reply</li>
+                    <li class="disabled"><i class="fas fa-times-circle"></i> Webhooks</li>
+                    <li class="disabled"><i class="fas fa-times-circle"></i> Analytics</li>
+                </ul>
+                <button class="plan-button current">Current Plan</button>
+            </div>
+
+            <!-- Starter Plan -->
+            <div class="pricing-card">
+                <div class="plan-name">Starter</div>
+                <div class="plan-description">Great for small businesses</div>
+                <div class="plan-price">
+                    <span class="price-currency">Rp</span>
+                    <span class="price-amount" id="starter-price">99</span>
+                    <span class="price-period" id="starter-period">/month</span>
+                </div>
+                <ul class="plan-features">
+                    <li><i class="fas fa-check-circle"></i> 3 Devices</li>
+                    <li><i class="fas fa-check-circle"></i> 1,000 Messages/day</li>
+                    <li><i class="fas fa-check-circle"></i> Priority Support</li>
+                    <li><i class="fas fa-check-circle"></i> Auto Reply</li>
+                    <li><i class="fas fa-check-circle"></i> Basic Webhooks</li>
+                    <li class="disabled"><i class="fas fa-times-circle"></i> Advanced Analytics</li>
+                </ul>
+                <button class="plan-button outline" onclick="upgradePlan('starter')">Upgrade Now</button>
+            </div>
+
+            <!-- Professional Plan (Featured) -->
+            <div class="pricing-card featured">
+                <div class="plan-name">Professional</div>
+                <div class="plan-description">Best for growing businesses</div>
+                <div class="plan-price">
+                    <span class="price-currency">Rp</span>
+                    <span class="price-amount" id="pro-price">299</span>
+                    <span class="price-period" id="pro-period">/month</span>
+                </div>
+                <ul class="plan-features">
+                    <li><i class="fas fa-check-circle"></i> 10 Devices</li>
+                    <li><i class="fas fa-check-circle"></i> 10,000 Messages/day</li>
+                    <li><i class="fas fa-check-circle"></i> 24/7 Support</li>
+                    <li><i class="fas fa-check-circle"></i> Advanced Auto Reply</li>
+                    <li><i class="fas fa-check-circle"></i> Unlimited Webhooks</li>
+                    <li><i class="fas fa-check-circle"></i> Advanced Analytics</li>
+                </ul>
+                <button class="plan-button primary" onclick="upgradePlan('professional')">Upgrade Now</button>
+            </div>
+
+            <!-- Enterprise Plan -->
+            <div class="pricing-card">
+                <div class="plan-name">Enterprise</div>
+                <div class="plan-description">For large-scale operations</div>
+                <div class="plan-price">
+                    <span class="price-currency">Rp</span>
+                    <span class="price-amount" id="enterprise-price">999</span>
+                    <span class="price-period" id="enterprise-period">/month</span>
+                </div>
+                <ul class="plan-features">
+                    <li><i class="fas fa-check-circle"></i> Unlimited Devices</li>
+                    <li><i class="fas fa-check-circle"></i> Unlimited Messages</li>
+                    <li><i class="fas fa-check-circle"></i> Dedicated Support</li>
+                    <li><i class="fas fa-check-circle"></i> Custom Auto Reply</li>
+                    <li><i class="fas fa-check-circle"></i> Custom Integrations</li>
+                    <li><i class="fas fa-check-circle"></i> White Label Option</li>
+                </ul>
+                <button class="plan-button outline" onclick="contactSales()">Contact Sales</button>
+            </div>
+        </div>
+
+        <!-- FAQ Section -->
+        <div class="faq-section">
+            <h2 class="faq-title">Frequently Asked Questions</h2>
+            <div class="faq-grid">
+                <div class="faq-item" onclick="toggleFAQ(this)">
+                    <div class="faq-question">
+                        Can I change my plan later?
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        Yes! You can upgrade or downgrade your plan at any time. Changes will take effect immediately,
+                        and we'll prorate any charges.
+                    </div>
+                </div>
+
+                <div class="faq-item" onclick="toggleFAQ(this)">
+                    <div class="faq-question">
+                        What payment methods do you accept?
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        We accept all major credit cards, bank transfers, and popular Indonesian payment methods like
+                        GoPay, OVO, and DANA.
+                    </div>
+                </div>
+
+                <div class="faq-item" onclick="toggleFAQ(this)">
+                    <div class="faq-question">
+                        Is there a free trial?
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        Yes! Our Free plan gives you access to basic features forever. You can upgrade at any time to
+                        unlock more features.
+                    </div>
+                </div>
+
+                <div class="faq-item" onclick="toggleFAQ(this)">
+                    <div class="faq-question">
+                        Can I cancel anytime?
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        Absolutely! There are no long-term contracts. You can cancel your subscription at any time, and
+                        you'll retain access until the end of your billing period.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/api.js"></script>
+    <script>
+        requireAuth();
+
+        // Pricing data
+        const pricing = {
+            monthly: {
+                starter: 99000,
+                professional: 299000,
+                enterprise: 999000
+            },
+            yearly: {
+                starter: 950000,  // 99k * 12 * 0.8 (20% discount)
+                professional: 2870000, // 299k * 12 * 0.8
+                enterprise: 9590000  // 999k * 12 * 0.8
+            }
+        };
+
+        let isYearly = false;
+
+        function formatPrice(price) {
+            return new Intl.NumberFormat('id-ID').format(price / 1000);
+        }
+
+        function toggleBilling() {
+            isYearly = !isYearly;
+            const switchEl = document.getElementById('billingSwitch');
+            const monthlyLabel = document.getElementById('monthlyLabel');
+            const yearlyLabel = document.getElementById('yearlyLabel');
+
+            if (isYearly) {
+                switchEl.classList.add('active');
+                monthlyLabel.style.color = 'var(--gray-500)';
+                yearlyLabel.style.color = 'var(--gray-900)';
+            } else {
+                switchEl.classList.remove('active');
+                monthlyLabel.style.color = 'var(--gray-900)';
+                yearlyLabel.style.color = 'var(--gray-500)';
+            }
+
+            updatePrices();
+        }
+
+        function updatePrices() {
+            const period = isYearly ? 'yearly' : 'monthly';
+            const periodText = isYearly ? '/year' : '/month';
+
+            // Update Starter
+            document.getElementById('starter-price').textContent = formatPrice(pricing[period].starter);
+            document.getElementById('starter-period').textContent = periodText;
+
+            // Update Professional
+            document.getElementById('pro-price').textContent = formatPrice(pricing[period].professional);
+            document.getElementById('pro-period').textContent = periodText;
+
+            // Update Enterprise
+            document.getElementById('enterprise-price').textContent = formatPrice(pricing[period].enterprise);
+            document.getElementById('enterprise-period').textContent = periodText;
+        }
+
+        function upgradePlan(plan) {
+            const period = isYearly ? 'yearly' : 'monthly';
+            const price = pricing[period][plan];
+
+            if (confirm(`Upgrade to ${plan.charAt(0).toUpperCase() + plan.slice(1)} plan for Rp ${formatPrice(price)}?\n\nThis is a mockup. Payment integration coming soon.`)) {
+                showAlert('info', `Redirecting to payment gateway... (Mockup)`);
+                setTimeout(() => {
+                    showAlert('success', `Successfully upgraded to ${plan.charAt(0).toUpperCase() + plan.slice(1)} plan! 🎉`);
+                }, 2000);
+            }
+        }
+
+        function contactSales() {
+            showAlert('info', 'Opening WhatsApp to contact our sales team...');
+            setTimeout(() => {
+                window.open('https://wa.me/628123456789?text=Hi, I\'m interested in the Enterprise plan', '_blank');
+            }, 1000);
+        }
+
+        function toggleFAQ(element) {
+            element.classList.toggle('active');
+        }
+
+        function showAlert(type, message) {
+            const container = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : type === 'info' ? 'info-circle' : 'exclamation-circle'}"></i> <span>${message}</span>`;
+            container.appendChild(alert);
+            setTimeout(() => { alert.style.opacity = '0'; setTimeout(() => alert.remove(), 300); }, 3000);
+        }
+
+        function confirmLogout() {
+            if (confirm('Apakah Anda yakin ingin logout?')) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = 'login.html';
+            }
+        }
+
+        // Load current user plan
+        async function loadCurrentPlan() {
+            try {
+                const response = await UsersAPI.getProfile();
+                const user = response.user;
+
+                // This is mockup - in real app, get from user.subscription
+                const currentPlan = 'free'; // user.subscription?.plan || 'free'
+
+                // Update UI to show current plan
+                document.querySelectorAll('.pricing-card').forEach(card => {
+                    card.classList.remove('current');
+                    const button = card.querySelector('.plan-button');
+                    button.classList.remove('current');
+                    button.textContent = card.querySelector('.plan-name').textContent === 'Free' ? 'Current Plan' : 'Upgrade Now';
+                });
+
+                const currentCard = document.getElementById(`plan-${currentPlan}`);
+                if (currentCard) {
+                    currentCard.classList.add('current');
+                    const badge = document.createElement('div');
+                    badge.className = 'current-badge';
+                    badge.textContent = 'Current Plan';
+                    currentCard.insertBefore(badge, currentCard.firstChild);
+                }
+
+            } catch (error) {
+                console.error('Error loading plan:', error);
+            }
+        }
+
+        // Init
+        updatePrices();
+        loadCurrentPlan();
+    </script>
+</body>
+
+</html>

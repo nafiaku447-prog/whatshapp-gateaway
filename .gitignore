@@ -1,0 +1,113 @@
+# ============================================
+# Environment Variables
+# ============================================
+.env
+.env.local
+.env.production
+*.env
+
+# ============================================
+# Node Modules
+# ============================================
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# ============================================
+# WhatsApp Session Files (PENTING!)
+# ============================================
+backend/.wwebjs_auth/
+backend/.wwebjs_cache/
+*.session.json
+
+# ============================================
+# Database
+# ============================================
+*.sqlite
+*.db
+*.sql.backup
+
+# ============================================
+# Logs
+# ============================================
+*.log
+logs/
+*.log.*
+
+# ============================================
+# OS Files
+# ============================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# ============================================
+# IDE
+# ============================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+*.sublime-project
+
+# ============================================
+# Uploads & Temporary Files
+# ============================================
+uploads/
+backend/uploads/
+*.tmp
+*.temp
+
+# ============================================
+# Build & Distribution
+# ============================================
+dist/
+build/
+.cache/
+.vercel/
+.next/
+
+# ============================================
+# Testing
+# ============================================
+coverage/
+.nyc_output/
+
+# ============================================
+# Credentials (JANGAN DI-PUSH!)
+# ============================================
+wa_credentials.txt
+wa_token.txt
+api_key.txt
+*.pem
+*.key
+*.cert
+
+# ============================================
+# Documentation Build
+# ============================================
+docs/_build/
+
+# ============================================
+# Miscellaneous
+# ============================================
+.npm
+.eslintcache
+.node_repl_history
+*.seed
+*.pid
+*.pid.lock

@@ -1,0 +1,39 @@
+# Backend files (jangan di-deploy ke Vercel)
+backend/
+node_modules/
+
+# Documentation
+*.md
+README.md
+DEPLOY_VERCEL.md
+API_DOCUMENTATION.md
+CARA_PAKAI.md
+
+# Test files
+test.js
+contoh_wa_gateway.js
+
+# Config files
+.env
+.env.local
+*.log
+
+# Database
+*.sql
+schema.sql
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary
+*.tmp
+*.temp

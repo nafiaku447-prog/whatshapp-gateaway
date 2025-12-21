@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kelola Perangkat - WA Gateway</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+
+    <!-- Main Styles -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/device.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        @keyframes flash {
+
+            0%,
+            100% {
+                transform: scale(1);
+                color: inherit;
+            }
+
+            50% {
+                transform: scale(1.2);
+                color: var(--primary-color);
+                font-weight: 700;
+            }
+        }
+    </style>
+
+</head>
+
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <i class="fab fa-whatsapp"></i>
+                <span>WA<span class="highlight">Gateway</span></span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-item">
+                <a href="dashboard.html" class="nav-link">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+            </div>
+
+            <div class="nav-item">
+                <a href="devices.html" class="nav-link active">
+                    <i class="fas fa-mobile-alt"></i>
+                    <span>Devices</span>
+                </a>
+            </div>
+
+            <div class="nav-item">
+                <a href="messages.html" class="nav-link">
+                    <i class="fas fa-paper-plane"></i>
+                    <span>Messages</span>
+                </a>
+            </div>
+
+            <div class="nav-item">
+                <a href="contacts.html" class="nav-link">
+                    <i class="fas fa-address-book"></i>
+                    <span>Contacts</span>
+                </a>
+            </div>
+
+            <div class="nav-section">AUTOMATION</div>
+
+            <div class="nav-item">
+                <a href="auto-reply.html" class="nav-link">
+                    <i class="fas fa-robot"></i>
+                    <span>Auto Reply</span>
+                </a>
+            </div>
+
+            <div class="nav-item">
+                <a href="webhooks.html" class="nav-link">
+                    <i class="fas fa-webhook"></i>
+                    <span>Webhooks</span>
+                </a>
+            </div>
+
+            <div class="nav-section">ACCOUNT</div>
+
+            <div class="nav-item">
+                <a href="subscription.html" class="nav-link">
+                    <i class="fas fa-crown"></i>
+                    <span>Subscription</span>
+                </a>
+            </div>
+
+            <div class="nav-item">
+                <a href="settings.html" class="nav-link">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar"></div>
+                <div class="user-details">
+                    <div class="user-name" id="userName">User</div>
+                    <div class="user-email" id="userEmail">user@email.com</div>
+                </div>
+                <button class="logout-btn" onclick="confirmLogout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Inline script to load avatar instantly from cache -->
+        <script>
+            (function () {
+                try {
+                    const cachedUser = localStorage.getItem('user');
+                    if (cachedUser) {
+                        const user = JSON.parse(cachedUser);
+                        const avatarEl = document.getElementById('userAvatar');
+                        if (avatarEl && user.profilePicture) {
+                            avatarEl.textContent = '';
+                            avatarEl.style.backgroundImage = `url("${user.profilePicture}")`;
+                            avatarEl.style.backgroundSize = 'cover';
+                            avatarEl.style.backgroundPosition = 'center';
+                        } else if (avatarEl && user.firstName) {
+                            avatarEl.style.backgroundImage = 'none';
+                            avatarEl.textContent = user.firstName.charAt(0).toUpperCase();
+                        }
+                    }
+                } catch (e) { }
+            })();
+        </script>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="header-content">
+                <div>
+                    <h1 class="page-title">Kelola Perangkat</h1>
+                    <p class="page-subtitle">Tambah dan kelola perangkat WhatsApp Anda</p>
+                </div>
+                <button class="btn btn-primary" onclick="openAddDeviceModal()">
+                    <i class="fas fa-plus"></i>
+                    <span>Tambah Perangkat</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Alert Container -->
+        <div id="alertContainer"></div>
+
+        <!-- Devices Grid -->
+        <div class="devices-grid" id="devicesGrid">
+            <!-- Add Device Card -->
+            <div class="add-device-card" onclick="openAddDeviceModal()">
+                <div class="add-device-icon">
+                    <i class="fas fa-plus"></i>
+                </div>
+                <h3 class="add-device-title">Tambah Perangkat Baru</h3>
+                <p class="add-device-subtitle">Hubungkan perangkat WhatsApp Anda</p>
+            </div>
+
+            <!-- Device cards will be loaded here -->
+        </div>
+    </main>
+
+    <!-- Add Device Modal -->
+    <div class="modal-overlay" id="addDeviceModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Tambah Perangkat Baru</h2>
+                <button class="modal-close" onclick="closeAddDeviceModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <form id="addDeviceForm">
+                <div class="form-group">
+                    <label class="form-label" for="deviceName">Nama Perangkat</label>
+                    <input type="text" id="deviceName" class="form-input" placeholder="Contoh: WhatsApp Bisnis"
+                        required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="phoneNumber">Nomor Telepon</label>
+                    <input type="tel" id="phoneNumber" class="form-input" placeholder="62812345678" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block" id="addDeviceBtn">
+                    <i class="fas fa-plus"></i>
+                    <span>Tambah Perangkat</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Device Detail Modal -->
+    <div class="modal-overlay" id="deviceDetailModal">
+        <div class="modal-content" style="max-width: 900px;">
+            <div class="modal-header">
+                <h2 class="modal-title">Detail Perangkat</h2>
+                <button class="modal-close" onclick="closeDeviceDetailModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div id="deviceDetailContent" style="max-height: 70vh; overflow-y: auto;">
+                <!-- Loading State -->
+                <div id="detailLoading" style="text-align: center; padding: 3rem;">
+                    <div class="loading" style="margin: 0 auto 1rem;"></div>
+                    <p style="color: #64748b;">Memuat detail perangkat...</p>
+                </div>
+
+                <!-- Content -->
+                <div id="detailData" style="display: none;">
+                    <!-- Device Info Section -->
+                    <div style="background: #f8fafc; padding: 1.5rem; border-radius: 0.5rem; margin-bottom: 1.5rem;">
+                        <div
+                            style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid #e2e8f0;">
+                            <div
+                                style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #25d366 0%, #128c7e 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 1.5rem;">
+                                <i class="fab fa-whatsapp"></i>
+                            </div>
+                            <div style="flex: 1;">
+                                <h3 id="detailDeviceName" style="margin: 0 0 0.25rem 0; font-size: 1.1rem;">-</h3>
+                                <p id="detailDevicePhone" style="margin: 0; color: #64748b; font-size: 0.9rem;">-</p>
+                            </div>
+                            <span id="detailStatusBadge" class="status-badge"></span>
+                        </div>
+
+                        <!-- WhatsApp Profile (if connected) -->
+                        <div id="detailWaProfile"
+                            style="display: none; background: white; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+                            <p style="margin: 0 0 0.5rem 0; color: #64748b; font-size: 0.85rem; font-weight: 500;">
+                                WhatsApp Connected As:</p>
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <div
+                                    style="width: 40px; height: 40px; border-radius: 50%; background: #e2e8f0; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fab fa-whatsapp" style="color: #25d366;"></i>
+                                </div>
+                                <div>
+                                    <div id="detailWaName" style="font-weight: 600; margin-bottom: 2px;">-</div>
+                                    <div id="detailWaNumber" style="font-size: 0.85rem; color: #64748b;">-</div>
+                                </div>
+                            </div>
+                            <div id="detailWaBattery" style="margin-top: 0.75rem; display: none;">
+                                <span
+                                    style="display: inline-block; background: #f1f5f9; padding: 0.25rem 0.75rem; border-radius: 0.25rem; font-size: 0.85rem; color: #475569;">
+                                    <i class="fas fa-battery-three-quarters"></i> <span id="batteryLevel">-</span>%
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Device Info Grid -->
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                            <div>
+                                <label
+                                    style="display: block; color: #64748b; font-size: 0.85rem; margin-bottom: 0.25rem;">Dibuat
+                                    Pada</label>
+                                <p id="detailCreated" style="margin: 0; font-weight: 500;">-</p>
+                            </div>
+                            <div>
+                                <label
+                                    style="display: block; color: #64748b; font-size: 0.85rem; margin-bottom: 0.25rem;">Terakhir
+                                    Online</label>
+                                <p id="detailLastSeen" style="margin: 0; font-weight: 500;">-</p>
+                            </div>
+                        </div>
+
+                        <!-- API Token -->
+                        <div style="margin-top: 1rem;">
+                            <label
+                                style="display: block; color: #64748b; font-size: 0.85rem; margin-bottom: 0.5rem;">API
+                                Token</label>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <input type="text" id="detailApiToken" readonly
+                                    style="flex: 1; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 0.375rem; font-family: monospace; font-size: 0.85rem; background: white;">
+                                <button class="btn btn-outline btn-sm" onclick="copyDetailToken()"
+                                    style="flex-shrink: 0;">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Test Message Section (Only for connected devices) -->
+                    <div id="detailTestSection"
+                        style="display: none; background: white; border: 1px solid #e2e8f0; padding: 1.5rem; border-radius: 0.5rem; margin-bottom: 1.5rem;">
+                        <h4
+                            style="margin: 0 0 1rem 0; font-size: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-paper-plane" style="color: var(--primary-color);"></i>
+                            Test Kirim Pesan
+                        </h4>
+                        <form id="detailTestMessageForm">
+                            <div class="form-group" style="margin-bottom: 1rem;">
+                                <label class="form-label">Nomor Tujuan</label>
+                                <input type="tel" id="detailTestNumber" class="form-input" placeholder="62812345678"
+                                    required>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 1rem;">
+                                <label class="form-label">Pesan</label>
+                                <textarea id="detailTestMessage" class="form-input" placeholder="Ketik pesan test..."
+                                    rows="3" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block" id="detailSendBtn">
+                                <i class="fas fa-paper-plane"></i> Kirim Pesan Test
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+                        <button class="btn btn-danger btn-sm" id="detailDisconnectBtn" onclick="disconnectFromDetail()"
+                            style="display: none;">
+                            <i class="fas fa-unlink"></i> Putuskan
+                        </button>
+                        <button class="btn btn-danger btn-sm btn-outline" onclick="deleteFromDetail()">
+                            <i class="fas fa-trash"></i> Hapus Device
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Menu Toggle -->
+    <button class="menu-toggle" id="menuToggle" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- API Service -->
+    <script src="js/api.js"></script>
+
+    <script>
+        // Check authentication
+        requireAuth();
+
+        // Global state
+        let devices = [];
+        let refreshInterval = null;
+
+        // Load devices on page load
+        window.onload = function () {
+            loadDevices();
+            startAutoRefresh();
+        };
+
+        // Start auto-refresh for scanning devices
+        function startAutoRefresh() {
+            // Clear existing interval
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+            }
+
+            // Auto-refresh every 10 seconds to keep stats updated in real-time
+            refreshInterval = setInterval(() => {
+                const hasConnecting = devices.some(d =>
+                    d.status === 'scanning' ||
+                    d.status === 'initializing' ||
+                    d.status === 'authenticated'
+                );
+
+                // Refresh more frequently (5s) if connecting, otherwise 10s for stats
+                if (hasConnecting) {
+                    loadDevices();
+                } else {
+                    // Still refresh but less frequently to update message counts
+                    loadDevices();
+                }
+            }, 10000); // 10 seconds for real-time feel
+        }
+
+        // Load devices from API
+        async function loadDevices() {
+            try {
+                const response = await apiRequest('/devices');
+                devices = response.devices || [];
+                renderDevices();
+            } catch (error) {
+                showAlert('danger', 'Gagal memuat perangkat: ' + error.message);
+            }
+        }
+
+        // Render devices
+        function renderDevices() {
+            const grid = document.getElementById('devicesGrid');
+
+            // Smart update: only update changed data instead of full re-render
+            devices.forEach(device => {
+                const existingCard = grid.querySelector(`[data-device-id="${device.id}"]`);
+
+                if (existingCard) {
+                    // Update existing card data
+                    updateDeviceCard(existingCard, device);
+                } else {
+                    // Create new card
+                    const addCard = grid.querySelector('.add-device-card');
+                    const card = createDeviceCard(device);
+                    if (addCard && addCard.nextSibling) {
+                        grid.insertBefore(card, addCard.nextSibling);
+                    } else {
+                        grid.appendChild(card);
+                    }
+                }
+            });
+
+            // Remove cards for deleted devices
+            const allCards = grid.querySelectorAll('[data-device-id]');
+            allCards.forEach(card => {
+                const deviceId = parseInt(card.getAttribute('data-device-id'));
+                const exists = devices.find(d => d.id === deviceId);
+                if (!exists) {
+                    card.remove();
+                }
+            });
+        }
+
+        // Update existing device card with new data
+        function updateDeviceCard(card, device) {
+            // Update status badge
+            const statusBadge = card.querySelector('.status-badge');
+            if (statusBadge) {
+                const newStatusClass = device.status === 'connected' ? 'connected' :
+                    device.status === 'scanning' ? 'scanning' : 'disconnected';
+                const newStatusText = device.status === 'connected' ? 'Terhubung' :
+                    device.status === 'scanning' ? 'Scanning' : 'Terputus';
+
+                statusBadge.className = `status-badge ${newStatusClass}`;
+                statusBadge.textContent = newStatusText;
+            }
+
+            // Update message count
+            const messageCountEl = card.querySelector('.stat-value');
+            if (messageCountEl) {
+                const newCount = device.messages_today || 0;
+                if (messageCountEl.textContent !== newCount.toString()) {
+                    messageCountEl.textContent = newCount;
+                    // Add flash animation
+                    messageCountEl.style.animation = 'none';
+                    setTimeout(() => {
+                        messageCountEl.style.animation = 'flash 0.5s ease';
+                    }, 10);
+                }
+            }
+
+            // Update QR code if status changed to scanning
+            const qrContainer = card.querySelector(`#qr-container-${device.id}`);
+            if (qrContainer && device.status === 'scanning' && device.qr_code) {
+                qrContainer.innerHTML = `
+                    <img src="${device.qr_code}" alt="QR Code" class="qr-image">
+                    <p style="text-align:center; margin-top:5px; color: #64748b; font-size: 0.85rem; font-weight: 500;">
+                        <i class="fas fa-camera" style="margin-right: 5px;"></i> Scan dengan WhatsApp
+                    </p>
+                `;
+            }
+        }
+
+        // Create device card
+        function createDeviceCard(device) {
+            const card = document.createElement('div');
+            card.className = 'device-card';
+            card.setAttribute('data-device-id', device.id);
+
+            const statusClass = device.status === 'connected' ? 'connected' :
+                device.status === 'scanning' ? 'scanning' : 'disconnected';
+
+            const statusText = device.status === 'connected' ? 'Terhubung' :
+                device.status === 'scanning' ? 'Scanning' : 'Terputus';
+
+            card.innerHTML = `
+                <div class="device-header">
+                    <div class="device-info">
+                        <h3>${device.device_name}</h3>
+                        <div class="device-phone">
+                            <i class="fas fa-phone"></i>
+                            ${device.phone_number}
+                        </div>
+                    </div>
+                    <span class="status-badge ${statusClass}">${statusText}</span>
+                </div>
+
+                ${device.status === 'connected' ? `
+                <div class="device-stats">
+                    <div class="stat-item">
+                        <div class="stat-label">Pesan Hari Ini</div>
+                        <div class="stat-value">${device.messages_today || 0}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Online Sejak</div>
+                        <div class="stat-value">${formatTime(device.last_seen)}</div>
+                    </div>
+                </div>
+                ` : device.status === 'scanning' && device.qr_code ? `
+                <div class="device-qr active" id="qr-container-${device.id}">
+                    <img src="${device.qr_code}" alt="QR Code" class="qr-image">
+                    <p style="text-align:center; margin-top:5px; color: #64748b; font-size: 0.85rem; font-weight: 500;">
+                        <i class="fas fa-camera" style="margin-right: 5px;"></i> Scan dengan WhatsApp
+                    </p>
+                </div>
+                ` : (device.status === 'initializing' || device.status === 'scanning' || device.status === 'authenticated') ? `
+                <div class="device-qr active" id="qr-container-${device.id}">
+                    <div class="qr-placeholder" style="padding: 2rem 0;">
+                        <div class="loading" style="margin: 0 auto 15px; border-color: var(--primary) transparent var(--primary) transparent;"></div>
+                        <p style="color: var(--text-dark); font-weight: 500;">Memuat QR Code...</p>
+                        <p style="font-size: 12px; color: #94a3b8;">Status: ${statusText}</p>
+                    </div>
+                </div>
+                ` : `
+                <div class="device-qr" id="qr-container-${device.id}">
+                    <div class="qr-placeholder">
+                        <i class="fas fa-qrcode"></i>
+                        <p>Klik "Scan QR" untuk menghubungkan</p>
+                    </div>
+                </div>
+                `}
+
+                <div class="device-actions">
+                    ${device.status === 'connected' ? `
+                        <button class="btn btn-outline btn-sm" onclick="viewDevice(${device.id})">
+                            <i class="fas fa-eye"></i>
+                            Lihat Detail
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="disconnectDevice(${device.id})">
+                            <i class="fas fa-unlink"></i>
+                            Putuskan
+                        </button>
+                    ` : `
+                        <button class="btn btn-primary btn-sm" onclick="connectDevice(${device.id}, this)">
+                            <i class="fas fa-qrcode"></i>
+                            Scan QR
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteDevice(${device.id})">
+                            <i class="fas fa-trash"></i>
+                            Hapus
+                        </button>
+                    `}
+                </div>
+            `;
+
+            return card;
+        }
+
+        // Format time helper
+        function formatTime(timestamp) {
+            if (!timestamp) return '-';
+            const date = new Date(timestamp);
+            const hours = date.getHours().toString().padStart(2, '0');
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            return `${hours}:${minutes}`;
+        }
+
+        // Modal functions
+        function openAddDeviceModal() {
+            document.getElementById('addDeviceModal').classList.add('active');
+        }
+
+        function closeAddDeviceModal() {
+            document.getElementById('addDeviceModal').classList.remove('active');
+            document.getElementById('addDeviceForm').reset();
+        }
+
+        // Add device form submission
+        document.getElementById('addDeviceForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const deviceName = document.getElementById('deviceName').value;
+            const phoneNumber = document.getElementById('phoneNumber').value;
+            const btn = document.getElementById('addDeviceBtn');
+
+            try {
+                showLoading(btn);
+
+                const response = await apiRequest('/devices', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        device_name: deviceName,
+                        phone_number: phoneNumber
+                    })
+                });
+
+                showAlert('success', 'Perangkat berhasil ditambahkan!');
+                closeAddDeviceModal();
+                loadDevices();
+
+            } catch (error) {
+                showAlert('danger', 'Gagal menambahkan perangkat: ' + error.message);
+            } finally {
+                hideLoading(btn);
+            }
+        });
+
+        // Device actions
+        // Device actions
+        async function connectDevice(id, btn) {
+            // Save original content
+            const originalContent = btn ? btn.innerHTML : '';
+            const qrContainer = document.getElementById(`qr-container-${id}`);
+            let originalQrContent = '';
+
+            try {
+                // Update Button State
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerHTML = '<div class="loading" style="width:16px; height:16px; border-width:2px; display:inline-block; vertical-align:middle; margin-right:5px;"></div> Memuat...';
+                }
+
+                // Update QR Container State
+                if (qrContainer) {
+                    originalQrContent = qrContainer.innerHTML;
+                    qrContainer.innerHTML = `
+                        <div class="qr-placeholder">
+                            <div class="loading" style="margin: 0 auto 15px;"></div>
+                            <p>Menghubungkan ke WhatsApp...</p>
+                            <p style="font-size: 12px; color: #888;">Mohon tunggu sebentar</p>
+                        </div>
+                    `;
+                }
+
+                const response = await apiRequest(`/devices/${id}/connect`, {
+                    method: 'POST'
+                });
+
+                showAlert('success', 'Silakan scan QR Code untuk menghubungkan perangkat');
+
+                // Immediate reload to show initializing state
+                loadDevices();
+
+            } catch (error) {
+                showAlert('danger', 'Gagal menghubungkan perangkat: ' + error.message);
+
+                // Restore UI on error
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = originalContent;
+                }
+                if (qrContainer && originalQrContent) {
+                    qrContainer.innerHTML = originalQrContent;
+                }
+            }
+        }
+
+        async function disconnectDevice(id) {
+            if (!confirm('Yakin ingin memutuskan perangkat ini?')) return;
+
+            try {
+                await apiRequest(`/devices/${id}/disconnect`, {
+                    method: 'POST'
+                });
+
+                showAlert('success', 'Perangkat berhasil diputuskan');
+                loadDevices();
+            } catch (error) {
+                showAlert('danger', 'Gagal memutuskan perangkat: ' + error.message);
+            }
+        }
+
+        async function deleteDevice(id) {
+            if (!confirm('Yakin ingin menghapus perangkat ini?')) return;
+
+            try {
+                await apiRequest(`/devices/${id}`, {
+                    method: 'DELETE'
+                });
+
+                showAlert('success', 'Perangkat berhasil dihapus');
+                loadDevices();
+            } catch (error) {
+                showAlert('danger', 'Gagal menghapus perangkat: ' + error.message);
+            }
+        }
+
+        let currentDetailDeviceId = null;
+
+        async function viewDevice(id) {
+            currentDetailDeviceId = id;
+            const modal = document.getElementById('deviceDetailModal');
+            const loading = document.getElementById('detailLoading');
+            const content = document.getElementById('detailData');
+
+            // Show modal and loading
+            modal.classList.add('active');
+            loading.style.display = 'block';
+            content.style.display = 'none';
+
+            try {
+                const response = await apiRequest(`/devices/${id}`);
+                renderDeviceDetail(response.device);
+                loading.style.display = 'none';
+                content.style.display = 'block';
+            } catch (error) {
+                showAlert('danger', 'Gagal memuat detail: ' + error.message);
+                closeDeviceDetailModal();
+            }
+        }
+
+        function renderDeviceDetail(device) {
+            // Basic Info
+            document.getElementById('detailDeviceName').textContent = device.device_name;
+            document.getElementById('detailDevicePhone').textContent = device.phone_number;
+            document.getElementById('detailCreated').textContent = new Date(device.created_at).toLocaleString('id-ID');
+            document.getElementById('detailLastSeen').textContent = device.last_seen ? new Date(device.last_seen).toLocaleString('id-ID') : '-';
+            document.getElementById('detailApiToken').value = device.api_token;
+
+            // Status Badge
+            const statusBadge = document.getElementById('detailStatusBadge');
+            const isConnected = device.status === 'connected';
+            statusBadge.className = 'status-badge ' + (isConnected ? 'connected' : 'disconnected');
+            statusBadge.textContent = isConnected ? 'Terhubung' : 'Terputus';
+
+            // WhatsApp Profile
+            const waProfile = document.getElementById('detailWaProfile');
+            if (device.whatsapp_info && isConnected) {
+                waProfile.style.display = 'block';
+                document.getElementById('detailWaName').textContent = device.whatsapp_info.pushname || device.whatsapp_info.wid.user;
+                document.getElementById('detailWaNumber').textContent = '+' + device.whatsapp_info.wid.user;
+
+                // Battery
+                const batteryDiv = document.getElementById('detailWaBattery');
+                if (device.whatsapp_info.battery) {
+                    batteryDiv.style.display = 'block';
+                    document.getElementById('batteryLevel').textContent = device.whatsapp_info.battery;
+                } else {
+                    batteryDiv.style.display = 'none';
+                }
+            } else {
+                waProfile.style.display = 'none';
+            }
+
+            // Test Message Section
+            const testSection = document.getElementById('detailTestSection');
+            const disconnectBtn = document.getElementById('detailDisconnectBtn');
+            if (isConnected) {
+                testSection.style.display = 'block';
+                disconnectBtn.style.display = 'inline-flex';
+            } else {
+                testSection.style.display = 'none';
+                disconnectBtn.style.display = 'none';
+            }
+        }
+
+        function closeDeviceDetailModal() {
+            document.getElementById('deviceDetailModal').classList.remove('active');
+            currentDetailDeviceId = null;
+        }
+
+        function copyDetailToken() {
+            const tokenInput = document.getElementById('detailApiToken');
+            tokenInput.select();
+            document.execCommand('copy');
+            showAlert('success', 'API Token berhasil disalin!');
+        }
+
+        document.getElementById('detailTestMessageForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const number = document.getElementById('detailTestNumber').value;
+            const message = document.getElementById('detailTestMessage').value;
+            const btn = document.getElementById('detailSendBtn');
+            const originalText = btn.innerHTML;
+
+            try {
+                btn.disabled = true;
+                btn.innerHTML = '<div class="loading" style="width:16px;height:16px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:5px;"></div> Mengirim...';
+
+                await apiRequest(`/devices/${currentDetailDeviceId}/send-message`, {
+                    method: 'POST',
+                    body: JSON.stringify({ recipient: number, message: message })
+                });
+
+                showAlert('success', 'Pesan test berhasil dikirim!');
+                document.getElementById('detailTestMessage').value = '';
+            } catch (error) {
+                showAlert('danger', 'Gagal mengirim: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        });
+
+        async function disconnectFromDetail() {
+            if (!confirm('Yakin ingin memutuskan perangkat ini?')) return;
+
+            try {
+                await apiRequest(`/devices/${currentDetailDeviceId}/disconnect`, { method: 'POST' });
+                showAlert('success', 'Perangkat berhasil diputuskan');
+                closeDeviceDetailModal();
+                loadDevices();
+            } catch (error) {
+                showAlert('danger', 'Gagal memutuskan: ' + error.message);
+            }
+        }
+
+        async function deleteFromDetail() {
+            if (!confirm('PERINGATAN: Yakin ingin MENGHAPUS perangkat ini?')) return;
+
+            try {
+                await apiRequest(`/devices/${currentDetailDeviceId}`, { method: 'DELETE' });
+                showAlert('success', 'Perangkat berhasil dihapus');
+                closeDeviceDetailModal();
+                loadDevices();
+            } catch (error) {
+                showAlert('danger', 'Gagal menghapus: ' + error.message);
+            }
+        }
+
+        // Show alert
+        function showAlert(type, message) {
+            const container = document.getElementById('alertContainer');
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+
+            container.innerHTML = `
+                <div class="alert ${alertClass}">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+                    ${message}
+                </div>
+            `;
+
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 5000);
+        }
+
+        // Loading helpers
+        function showLoading(btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<div class="loading"></div>';
+        }
+
+        function hideLoading(btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-plus"></i><span>Tambah Perangkat</span>';
+        }
+
+        // Logout
+        function confirmLogout() {
+            if (confirm('Yakin ingin keluar?')) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = 'login.html';
+            }
+        }
+
+        // Toggle sidebar (mobile)
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+        }
+
+        // Close modal on outside click
+        document.getElementById('addDeviceModal').addEventListener('click', function (e) {
+            if (e.target === this) {
+                closeAddDeviceModal();
+            }
+        });
+
+        document.getElementById('deviceDetailModal').addEventListener('click', function (e) {
+            if (e.target === this) {
+                closeDeviceDetailModal();
+            }
+        });
+    </script>
+</body>
+
+</html>

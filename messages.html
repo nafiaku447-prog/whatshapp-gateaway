@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kirim Pesan - WA Gateway</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+
+    <!-- Main Styles -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/device.css"> <!-- Reusing sidebar/layout styles -->
+    <link rel="stylesheet" href="css/messages.css">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <i class="fab fa-whatsapp"></i>
+                <span>WA<span class="highlight">Gateway</span></span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-item">
+                <a href="dashboard.html" class="nav-link">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+            </div>
+
+            <div class="nav-item">
+                <a href="devices.html" class="nav-link">
+                    <i class="fas fa-mobile-alt"></i>
+                    <span>Devices</span>
+                </a>
+            </div>
+
+            <div class="nav-item">
+                <a href="messages.html" class="nav-link active">
+                    <i class="fas fa-paper-plane"></i>
+                    <span>Messages</span>
+                </a>
+            </div>
+
+            <div class="nav-item">
+                <a href="contacts.html" class="nav-link">
+                    <i class="fas fa-address-book"></i>
+                    <span>Contacts</span>
+                </a>
+            </div>
+
+            <div class="nav-section">AUTOMATION</div>
+
+            <div class="nav-item">
+                <a href="auto-reply.html" class="nav-link">
+                    <i class="fas fa-robot"></i>
+                    <span>Auto Reply</span>
+                </a>
+            </div>
+
+            <div class="nav-item">
+                <a href="webhooks.html" class="nav-link">
+                    <i class="fas fa-webhook"></i>
+                    <span>Webhooks</span>
+                </a>
+            </div>
+
+            <div class="nav-section">ACCOUNT</div>
+
+            <div class="nav-item">
+                <a href="subscription.html" class="nav-link">
+                    <i class="fas fa-crown"></i>
+                    <span>Subscription</span>
+                </a>
+            </div>
+
+            <div class="nav-item">
+                <a href="settings.html" class="nav-link">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar"></div>
+                <div class="user-details">
+                    <div class="user-name" id="userName">User</div>
+                    <div class="user-email" id="userEmail">user@email.com</div>
+                </div>
+                <button class="logout-btn" onclick="confirmLogout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Inline script to load avatar instantly from cache -->
+        <script>
+            (function () {
+                try {
+                    const cachedUser = localStorage.getItem('user');
+                    if (cachedUser) {
+                        const user = JSON.parse(cachedUser);
+                        const avatarEl = document.getElementById('userAvatar');
+                        if (avatarEl && user.profilePicture) {
+                            avatarEl.textContent = '';
+                            avatarEl.style.backgroundImage = `url("${user.profilePicture}")`;
+                            avatarEl.style.backgroundSize = 'cover';
+                            avatarEl.style.backgroundPosition = 'center';
+                        } else if (avatarEl && user.firstName) {
+                            avatarEl.style.backgroundImage = 'none';
+                            avatarEl.textContent = user.firstName.charAt(0).toUpperCase();
+                        }
+                    }
+                } catch (e) { }
+            })();
+        </script>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="header-content">
+                <div>
+                    <h1 class="page-title">Kirim Pesan</h1>
+                    <p class="page-subtitle">Kirim pesan WhatsApp ke pelanggan Anda</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alert Container -->
+        <div id="alertContainer"></div>
+
+        <div class="messages-grid">
+            <!-- Composer Area -->
+            <div class="composer-card">
+                <div class="composer-header">
+                    <div class="device-selector-wrapper">
+                        <i class="fas fa-mobile-alt text-gray-400"></i>
+                        <select id="deviceSelect" class="device-select">
+                            <option value="">Pilih Perangkat Pengirim...</option>
+                        </select>
+                    </div>
+                    <div class="status-indicator" id="deviceStatus">
+                        <!-- Will show status dot -->
+                    </div>
+                </div>
+
+                <!-- Preview Area -->
+                <div class="preview-area" id="previewArea">
+                    <div class="preview-placeholder">
+                        <i class="fas fa-eye"></i> Preview Pesan
+                    </div>
+                    <!-- Bubbles will appear here -->
+                    <div id="messagePreview" class="preview-bubble" style="display: none;">
+                        <span id="previewText">Hello World</span>
+                        <span class="preview-time" id="previewTime">10:00</span>
+                    </div>
+                </div>
+
+                <!-- Input Area -->
+                <form id="messageForm" class="input-area">
+                    <div class="message-type-tabs">
+                        <div class="type-tab active" data-type="text" onclick="setMessageType('text')">
+                            <i class="fas fa-font"></i> Teks
+                        </div>
+                        <div class="type-tab" data-type="image" onclick="setMessageType('image')">
+                            <i class="fas fa-image"></i> Gambar
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <label class="form-label">Nomor Tujuan</label>
+                        <div class="phone-input-wrapper">
+                            <i class="fas fa-phone"></i>
+                            <input type="tel" id="recipientNumber" class="form-input phone-input"
+                                placeholder="62812345678" required>
+                        </div>
+                    </div>
+
+                    <div id="imageUploadArea" class="upload-area">
+                        <i class="fas fa-cloud-upload-alt fa-2x mb-2 text-primary"></i>
+                        <p class="mb-0">Klik untuk upload gambar</p>
+                        <input type="file" id="imageInput" accept="image/*" style="display: none;">
+                        <input type="text" id="imageUrl" class="form-input mt-2"
+                            placeholder="Atau paste URL gambar disini...">
+                    </div>
+
+                    <div class="input-group">
+                        <label class="form-label">Pesan</label>
+                        <textarea id="messageContent" class="form-input" rows="3"
+                            placeholder="Ketik pesan Anda disini..." required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block" id="sendBtn">
+                        <i class="fas fa-paper-plane"></i> Kirim Pesan
+                    </button>
+                </form>
+            </div>
+
+            <!-- Recent History -->
+            <div class="side-panel">
+                <div class="history-card">
+                    <h3 style="margin-bottom: 1rem; font-size: 1.1rem; font-weight: 700;">Riwayat Terakhir</h3>
+                    <div id="historyList">
+                        <!-- History Items -->
+                        <div class="text-center p-4 text-gray-500">
+                            Belum ada riwayat
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Mobile Menu Toggle -->
+    <button class="menu-toggle" id="menuToggle" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- API Service -->
+    <script src="js/api.js"></script>
+
+    <script>
+        // Check authentication
+        requireAuth();
+
+        // Global functions
+        function showAlert(type, message) {
+            const container = document.getElementById('alertContainer');
+            if (!container) return; // Guard clause
+
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+                <span>${message}</span>
+            `;
+
+            container.appendChild(alert);
+
+            // Auto remove
+            setTimeout(() => {
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 300);
+            }, 3000);
+        }
+
+        // State
+        let currentMessageType = 'text';
+
+        // Initialize
+        window.onload = async function () {
+            await loadDevices();
+            // Try to load history if API exists for it, otherwise skipping for now
+        };
+
+        // UI Functions
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+        }
+
+        function setMessageType(type) {
+            currentMessageType = type;
+
+            // Toggle Tabs
+            document.querySelectorAll('.type-tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.type === type);
+            });
+
+            // Toggle Upload Area
+            const uploadArea = document.getElementById('imageUploadArea');
+            if (type === 'image') {
+                uploadArea.classList.add('active');
+            } else {
+                uploadArea.classList.remove('active');
+            }
+        }
+
+        // Live Preview
+        const messageInput = document.getElementById('messageContent');
+        const previewBubble = document.getElementById('messagePreview');
+        const previewText = document.getElementById('previewText');
+        const previewPlaceholder = document.querySelector('.preview-placeholder');
+
+        messageInput.addEventListener('input', function () {
+            if (this.value.trim()) {
+                previewBubble.style.display = 'block';
+                previewPlaceholder.style.display = 'none';
+                previewText.textContent = this.value;
+                document.getElementById('previewTime').textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            } else {
+                previewBubble.style.display = 'none';
+                previewPlaceholder.style.display = 'block';
+            }
+        });
+
+        // Load Devices
+        async function loadDevices() {
+            try {
+                const response = await apiRequest('/devices');
+                const devices = response.devices || [];
+                const select = document.getElementById('deviceSelect');
+
+                // Filter only connected devices
+                const connectedDevices = devices.filter(d => d.status === 'connected');
+
+                select.innerHTML = '<option value="">Pilih Perangkat Pengirim...</option>';
+
+                if (connectedDevices.length === 0) {
+                    const option = document.createElement('option');
+                    option.text = "Tidak ada perangkat terhubung";
+                    option.disabled = true;
+                    select.appendChild(option);
+                    showAlert('warning', 'Anda belum memiliki perangkat yang terhubung. Silakan scan QR code di menu Devices.');
+                } else {
+                    connectedDevices.forEach(d => {
+                        const option = document.createElement('option');
+                        option.value = d.id;
+                        option.textContent = `${d.device_name} (${d.phone_number})`;
+                        select.appendChild(option);
+                    });
+                }
+
+            } catch (error) {
+                console.error('Error loading devices:', error);
+                showAlert('danger', 'Gagal memuat perangkat.');
+            }
+        }
+
+        // Handle Send
+        document.getElementById('messageForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const deviceId = document.getElementById('deviceSelect').value;
+            const recipient = document.getElementById('recipientNumber').value;
+            const message = document.getElementById('messageContent').value;
+            const btn = document.getElementById('sendBtn');
+            const originalBtnText = btn.innerHTML;
+
+            if (!deviceId) {
+                showAlert('warning', 'Silakan pilih perangkat pengirim terlebih dahulu.');
+                return;
+            }
+
+            try {
+                btn.disabled = true;
+                btn.innerHTML = '<div class="loading" style="width:16px;height:16px;display:inline-block;vertical-align:middle;margin-right:5px;border-width:2px;"></div> Mengirim...';
+
+                // Prepare payload
+                const payload = {
+                    recipient: recipient,
+                    message: message
+                };
+
+                // If image type (simplified logic - assuming backend handles URL or base64)
+                // For now sticking to text as per standard endpoint, but if image supported:
+                if (currentMessageType === 'image') {
+                    // payload.media_url = ...; // needs implementation based on backend
+                }
+
+                await apiRequest(`/devices/${deviceId}/send-message`, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+
+                showAlert('success', 'Pesan berhasil dikirim!');
+
+                // Add to temporary history list
+                addToHistory(recipient, message, 'sent');
+
+                // Clear form
+                document.getElementById('messageContent').value = '';
+                previewBubble.style.display = 'none';
+                previewPlaceholder.style.display = 'block';
+
+            } catch (error) {
+                showAlert('danger', 'Gagal mengirim pesan: ' + error.message);
+                addToHistory(recipient, message, 'failed');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalBtnText;
+            }
+        });
+
+        function addToHistory(phone, msg, status) {
+            const list = document.getElementById('historyList');
+            const emptyState = list.querySelector('.text-center');
+            if (emptyState) emptyState.remove();
+
+            const item = document.createElement('div');
+            item.className = 'history-item';
+            item.innerHTML = `
+                <div class="history-icon ${status}">
+                    <i class="fas fa-${status === 'sent' ? 'check' : 'times'}"></i>
+                </div>
+                <div class="history-details">
+                    <h4>${phone}</h4>
+                    <p>${msg.substring(0, 30)}${msg.length > 30 ? '...' : ''}</p>
+                </div>
+                <div class="history-time">Baru saja</div>
+            `;
+
+            list.insertBefore(item, list.firstChild);
+        }
+
+        function confirmLogout() {
+            if (confirm('Apakah Anda yakin ingin logout?')) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = 'login.html';
+            }
+        }
+    </script>
+</body>
+
+</html>

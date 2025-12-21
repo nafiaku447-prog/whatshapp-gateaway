@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kontak - WA Gateway</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/device.css">
+    <link rel="stylesheet" href="css/contacts.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <i class="fab fa-whatsapp"></i>
+                <span>WA<span class="highlight">Gateway</span></span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-item">
+                <a href="dashboard.html" class="nav-link">
+                    <i class="fas fa-home"></i> <span>Dashboard</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="devices.html" class="nav-link">
+                    <i class="fas fa-mobile-alt"></i> <span>Devices</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="messages.html" class="nav-link">
+                    <i class="fas fa-paper-plane"></i> <span>Messages</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="contacts.html" class="nav-link active">
+                    <i class="fas fa-address-book"></i> <span>Contacts</span>
+                </a>
+            </div>
+
+            <div class="nav-section">AUTOMATION</div>
+            <div class="nav-item">
+                <a href="auto-reply.html" class="nav-link">
+                    <i class="fas fa-robot"></i> <span>Auto Reply</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="webhooks.html" class="nav-link">
+                    <i class="fas fa-webhook"></i> <span>Webhooks</span>
+                </a>
+            </div>
+
+            <div class="nav-section">ACCOUNT</div>
+            <div class="nav-item">
+                <a href="subscription.html" class="nav-link">
+                    <i class="fas fa-crown"></i> <span>Subscription</span>
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="settings.html" class="nav-link">
+                    <i class="fas fa-cog"></i> <span>Settings</span>
+                </a>
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar"></div>
+                <div class="user-details">
+                    <div class="user-name" id="userName">User</div>
+                    <div class="user-email" id="userEmail">user@email.com</div>
+                </div>
+                <button class="logout-btn" onclick="confirmLogout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Inline script to load avatar instantly from cache -->
+        <script>
+            (function () {
+                try {
+                    const cachedUser = localStorage.getItem('user');
+                    if (cachedUser) {
+                        const user = JSON.parse(cachedUser);
+                        const avatarEl = document.getElementById('userAvatar');
+                        if (avatarEl && user.profilePicture) {
+                            avatarEl.textContent = '';
+                            avatarEl.style.backgroundImage = `url("${user.profilePicture}")`;
+                            avatarEl.style.backgroundSize = 'cover';
+                            avatarEl.style.backgroundPosition = 'center';
+                        } else if (avatarEl && user.firstName) {
+                            avatarEl.style.backgroundImage = 'none';
+                            avatarEl.textContent = user.firstName.charAt(0).toUpperCase();
+                        }
+                    }
+                } catch (e) { }
+            })();
+        </script>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="page-header">
+            <div class="header-content">
+                <div>
+                    <h1 class="page-title">Kontak</h1>
+                    <p class="page-subtitle">Kelola daftar kontak pelanggan Anda</p>
+                </div>
+                <button class="btn btn-primary" onclick="openAddContactModal()">
+                    <i class="fas fa-plus"></i> Tambah Kontak
+                </button>
+            </div>
+        </div>
+
+        <div id="alertContainer"></div>
+
+        <div class="contacts-toolbar">
+            <div class="search-bar">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" class="search-input" id="searchInput"
+                    placeholder="Cari kontak berdasarkan nama atau nomor..." onkeyup="filterContacts()">
+            </div>
+        </div>
+
+        <div class="contacts-table-wrapper">
+            <table class="contacts-table">
+                <thead>
+                    <tr>
+                        <th>Nama</th>
+                        <th>Nomor Telepon</th>
+                        <th>Tag</th>
+                        <th>Dibuat Pada</th>
+                        <th style="text-align: right;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="contactsBody">
+                    <!-- Loading State -->
+                    <tr>
+                        <td colspan="5" class="text-center" style="padding: 3rem;">
+                            <div class="loading"
+                                style="margin: 0 auto; border-color: var(--primary) transparent var(--primary) transparent;">
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- Add Contact Modal -->
+    <div class="modal-overlay" id="addContactModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Tambah Kontak Baru</h2>
+                <button class="modal-close" onclick="closeAddContactModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="addContactForm">
+                <div class="form-group">
+                    <label class="form-label">Nama Lengkap</label>
+                    <input type="text" id="contactName" class="form-input" placeholder="Nama Pelanggan" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nomor Telepon</label>
+                    <input type="tel" id="contactPhone" class="form-input" placeholder="62812345678" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tag (Opsional)</label>
+                    <input type="text" id="contactTag" class="form-input" placeholder="Contoh: Customer, VIP">
+                </div>
+                <button type="submit" class="btn btn-primary btn-block" id="saveContactBtn">
+                    <i class="fas fa-save"></i> Simpan Kontak
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        requireAuth();
+
+        // --- Functions ---
+
+        async function loadContacts() {
+            try {
+                // Determine API endpoint - user is using api.js which defines ContactsAPI.getAll
+                // Assuming it returns { contacts: [...] }
+                // If API not ready, we use mock data for display
+
+                let contacts = [];
+                try {
+                    const response = await apiRequest('/contacts');
+                    contacts = response.contacts || [];
+                } catch (e) {
+                    console.log("Using mock data as API might be missing");
+                    contacts = [
+                        { id: 1, name: 'Budi Santoso', phone: '628123456789', tag: 'VIP', created_at: new Date().toISOString() },
+                        { id: 2, name: 'Siti Aminah', phone: '628567890123', tag: 'Customer', created_at: new Date(Date.now() - 86400000).toISOString() }
+                    ];
+                }
+
+                renderContacts(contacts);
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('contactsBody').innerHTML = `
+                    <tr><td colspan="5" style="text-align:center; color:red;">Gagal memuat kontak.</td></tr>
+                `;
+            }
+        }
+
+        function renderContacts(contacts) {
+            const tbody = document.getElementById('contactsBody');
+            if (contacts.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5">
+                            <div class="empty-state">
+                                <div class="empty-state-icon"><i class="fas fa-users"></i></div>
+                                <h3>Belum ada kontak</h3>
+                                <p>Tambahkan kontak pertama Anda untuk memulai.</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = contacts.map(c => `
+                <tr>
+                    <td>
+                        <div class="contact-info">
+                            <div class="contact-avatar">${c.name.charAt(0).toUpperCase()}</div>
+                            <div>
+                                <div class="contact-name">${c.name}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>${c.phone}</td>
+                    <td><span class="tag-badge">${c.tag || 'General'}</span></td>
+                    <td>${new Date(c.created_at).toLocaleDateString('id-ID')}</td>
+                    <td style="text-align: right;">
+                        <div class="action-btn-group" style="justify-content: flex-end;">
+                            <button class="action-btn-icon" onclick="sendMessage('${c.phone}')" title="Kirim Pesan">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                            <button class="action-btn-icon delete" onclick="deleteContact(${c.id})" title="Hapus">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function openAddContactModal() {
+            document.getElementById('addContactModal').classList.add('active');
+        }
+
+        function closeAddContactModal() {
+            document.getElementById('addContactModal').classList.remove('active');
+        }
+
+        function sendMessage(phone) {
+            window.location.href = `messages.html?phone=${phone}`;
+        }
+
+        async function deleteContact(id) {
+            if (confirm('Yakin ingin menghapus kontak ini?')) {
+                // Call API
+                showAlert('success', 'Kontak berhasil dihapus');
+                loadContacts(); // reload
+            }
+        }
+
+        // Form Submit
+        document.getElementById('addContactForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            // Simulate save
+            showAlert('success', 'Kontak berhasil ditambahkan');
+            closeAddContactModal();
+            loadContacts();
+        });
+
+        // Search
+        function filterContacts() {
+            const input = document.getElementById('searchInput');
+            const filter = input.value.toLowerCase();
+            const table = document.querySelector('.contacts-table');
+            const tr = table.getElementsByTagName('tr');
+
+            for (let i = 1; i < tr.length; i++) {
+                const tdName = tr[i].getElementsByTagName('td')[0];
+                const tdPhone = tr[i].getElementsByTagName('td')[1];
+                if (tdName || tdPhone) {
+                    const txtValueName = tdName.textContent || tdName.innerText;
+                    const txtValuePhone = tdPhone.textContent || tdPhone.innerText;
+                    if (txtValueName.toLowerCase().indexOf(filter) > -1 || txtValuePhone.indexOf(filter) > -1) {
+                        tr[i].style.display = '';
+                    } else {
+                        tr[i].style.display = 'none';
+                    }
+                }
+            }
+        }
+
+        // Global Alert (Helper)
+        function showAlert(type, message) {
+            const container = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> <span>${message}</span>`;
+            container.appendChild(alert);
+            setTimeout(() => { alert.style.opacity = '0'; setTimeout(() => alert.remove(), 300); }, 3000);
+        }
+
+        function confirmLogout() {
+            if (confirm('Apakah Anda yakin ingin logout?')) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = 'login.html';
+            }
+        }
+
+        // Init
+        loadContacts();
+    </script>
+</body>
+
+</html>

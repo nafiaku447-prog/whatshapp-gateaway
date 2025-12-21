@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto Reply - WA Gateway</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/device.css">
+    <link rel="stylesheet" href="css/automation.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+
+<body>
+    <!-- Sidebar (Same as others) -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <i class="fab fa-whatsapp"></i>
+                <span>WA<span class="highlight">Gateway</span></span>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-item"><a href="dashboard.html" class="nav-link"><i class="fas fa-home"></i>
+                    <span>Dashboard</span></a></div>
+            <div class="nav-item"><a href="devices.html" class="nav-link"><i class="fas fa-mobile-alt"></i>
+                    <span>Devices</span></a></div>
+            <div class="nav-item"><a href="messages.html" class="nav-link"><i class="fas fa-paper-plane"></i>
+                    <span>Messages</span></a></div>
+            <div class="nav-item"><a href="contacts.html" class="nav-link"><i class="fas fa-address-book"></i>
+                    <span>Contacts</span></a></div>
+            <div class="nav-section">AUTOMATION</div>
+            <div class="nav-item"><a href="auto-reply.html" class="nav-link active"><i class="fas fa-robot"></i>
+                    <span>Auto Reply</span></a></div>
+            <div class="nav-item"><a href="webhooks.html" class="nav-link"><i class="fas fa-webhook"></i>
+                    <span>Webhooks</span></a></div>
+            <div class="nav-section">ACCOUNT</div>
+            <div class="nav-item"><a href="subscription.html" class="nav-link"><i class="fas fa-crown"></i>
+                    <span>Subscription</span></a></div>
+            <div class="nav-item"><a href="settings.html" class="nav-link"><i class="fas fa-cog"></i>
+                    <span>Settings</span></a></div>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar"></div>
+                <div class="user-details">
+                    <div class="user-name" id="userName">User</div>
+                    <div class="user-email" id="userEmail">user@email.com</div>
+                </div>
+                <button class="logout-btn" onclick="confirmLogout()"><i class="fas fa-sign-out-alt"></i></button>
+            </div>
+        </div>
+
+        <!-- Inline script to load avatar instantly from cache -->
+        <script>
+            (function () {
+                try {
+                    const cachedUser = localStorage.getItem('user');
+                    if (cachedUser) {
+                        const user = JSON.parse(cachedUser);
+                        const avatarEl = document.getElementById('userAvatar');
+                        if (avatarEl && user.profilePicture) {
+                            avatarEl.textContent = '';
+                            avatarEl.style.backgroundImage = `url("${user.profilePicture}")`;
+                            avatarEl.style.backgroundSize = 'cover';
+                            avatarEl.style.backgroundPosition = 'center';
+                        } else if (avatarEl && user.firstName) {
+                            avatarEl.style.backgroundImage = 'none';
+                            avatarEl.textContent = user.firstName.charAt(0).toUpperCase();
+                        }
+                    }
+                } catch (e) { }
+            })();
+        </script>
+    </aside>
+
+    <main class="main-content">
+        <div class="page-header">
+            <div class="header-content">
+                <div>
+                    <h1 class="page-title">Auto Reply</h1>
+                    <p class="page-subtitle">Otomatisasi balasan pesan WhatsApp</p>
+                </div>
+                <button class="btn btn-primary" onclick="openAddRuleModal()">
+                    <i class="fas fa-plus"></i> Tambah Rule
+                </button>
+            </div>
+        </div>
+
+        <div id="alertContainer"></div>
+
+        <div id="rulesList">
+            <!-- Example Rule -->
+            <div class="loading text-center" style="margin-top: 3rem;"></div>
+        </div>
+    </main>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="addRuleModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Tambah Auto Reply</h2>
+                <button class="modal-close" onclick="closeAddRuleModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <form id="addRuleForm">
+                <div class="form-group">
+                    <label class="form-label">Keyword</label>
+                    <input type="text" id="ruleKeyword" class="form-input" placeholder="Contoh: halo, info, bantuan"
+                        required>
+                    <small style="color:var(--gray-500)">Gunakan koma untuk banyak keyword</small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tipe Pencocokan</label>
+                    <select id="ruleType" class="form-input">
+                        <option value="exact">Sama Persis (Exact)</option>
+                        <option value="contains">Mengandung (Contains)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Respon Balasan</label>
+                    <textarea id="ruleResponse" class="form-input" rows="4" placeholder="Pesan balasan..."
+                        required></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <label class="switch">
+                        <input type="checkbox" id="ruleActive" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Simpan Rule</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script>
+        requireAuth();
+
+        // Mock Rules Data (Replace with API call)
+        let rules = [
+            { id: 1, keyword: 'halo, hi, ping', type: 'exact', response: 'Halo! Ada yang bisa kami bantu? Ketik MENU untuk melihat pilihan.', active: true },
+            { id: 2, keyword: 'menu', type: 'exact', response: 'Berikut adalah menu kami:\n1. Produk\n2. Harga\n3. Lokasi', active: true },
+            { id: 3, keyword: 'harga', type: 'contains', response: 'Daftar harga bisa dilihat di website kami: example.com/pricing', active: false }
+        ];
+
+        function loadRules() {
+            // In a real app: const response = await apiRequest('/auto-replies');
+            const container = document.getElementById('rulesList');
+            container.innerHTML = '';
+
+            if (rules.length === 0) {
+                container.innerHTML = `<div class="empty-state"><h3>Belum ada rule</h3><p>Buat rule pertama Anda.</p></div>`;
+                return;
+            }
+
+            rules.forEach(rule => {
+                const card = document.createElement('div');
+                card.className = `rule-card ${rule.active ? 'active' : ''}`;
+                card.innerHTML = `
+                    <div class="rule-header">
+                        <div>
+                            <span class="rule-keyword-badge">${rule.keyword}</span>
+                            <span class="rule-type-badge">${rule.type}</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" ${rule.active ? 'checked' : ''} onchange="toggleRule(${rule.id})">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="rule-response">${rule.response.replace(/\n/g, '<br>')}</div>
+                    <div class="rule-meta">
+                        <span>Dibalas ke semua pengirim</span>
+                        <div>
+                            <button class="btn btn-outline btn-sm" onclick="editRule(${rule.id})" style="padding: 0.25rem 0.5rem;"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteRule(${rule.id})" style="padding: 0.25rem 0.5rem;"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function openAddRuleModal() { document.getElementById('addRuleModal').classList.add('active'); }
+        function closeAddRuleModal() { document.getElementById('addRuleModal').classList.remove('active'); document.getElementById('addRuleForm').reset(); }
+
+        document.getElementById('addRuleForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            showAlert('success', 'Auto reply rule berhasil disimpan');
+            // Add mock logic to update list
+            const kw = document.getElementById('ruleKeyword').value;
+            const resp = document.getElementById('ruleResponse').value;
+            rules.push({ id: Date.now(), keyword: kw, type: document.getElementById('ruleType').value, response: resp, active: document.getElementById('ruleActive').checked });
+            closeAddRuleModal();
+            loadRules();
+        });
+
+        function toggleRule(id) {
+            const rule = rules.find(r => r.id === id);
+            if (rule) {
+                rule.active = !rule.active;
+                loadRules();
+                // Call API
+            }
+        }
+
+        function deleteRule(id) {
+            if (confirm('Hapus rule ini?')) {
+                rules = rules.filter(r => r.id !== id);
+                loadRules();
+                showAlert('success', 'Rule dihapus');
+            }
+        }
+
+        function editRule(id) {
+            // Populate form and open modal (simplified)
+            showAlert('info', 'Edit feature coming soon (Mockup)');
+        }
+
+        function showAlert(type, message) {
+            const container = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> <span>${message}</span>`;
+            container.appendChild(alert);
+            setTimeout(() => { alert.style.opacity = '0'; setTimeout(() => alert.remove(), 300); }, 3000);
+        }
+
+        function confirmLogout() {
+            if (confirm('Apakah Anda yakin ingin logout?')) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = 'login.html';
+            }
+        }
+
+        loadRules();
+    </script>
+</body>
+
+</html>
