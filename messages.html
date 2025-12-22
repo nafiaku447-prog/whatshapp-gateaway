@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/device.css"> <!-- Reusing sidebar/layout styles -->
     <link rel="stylesheet" href="css/messages.css">
+    <link rel="stylesheet" href="css/toast.css?v=3.0">
 
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -72,7 +73,7 @@
 
             <div class="nav-item">
                 <a href="webhooks.html" class="nav-link">
-                    <i class="fas fa-webhook"></i>
+                    <i class="fas fa-link"></i>
                     <span>Webhooks</span>
                 </a>
             </div>
@@ -142,8 +143,7 @@
             </div>
         </div>
 
-        <!-- Alert Container -->
-        <div id="alertContainer"></div>
+
 
         <div class="messages-grid">
             <!-- Composer Area -->
@@ -179,7 +179,10 @@
                             <i class="fas fa-font"></i> Teks
                         </div>
                         <div class="type-tab" data-type="image" onclick="setMessageType('image')">
-                            <i class="fas fa-image"></i> Gambar
+                            <i class="fas fa-image"></i> Foto
+                        </div>
+                        <div class="type-tab" data-type="video" onclick="setMessageType('video')">
+                            <i class="fas fa-video"></i> Video
                         </div>
                     </div>
 
@@ -194,10 +197,19 @@
 
                     <div id="imageUploadArea" class="upload-area">
                         <i class="fas fa-cloud-upload-alt fa-2x mb-2 text-primary"></i>
-                        <p class="mb-0">Klik untuk upload gambar</p>
+                        <p class="mb-0">Klik untuk upload foto</p>
                         <input type="file" id="imageInput" accept="image/*" style="display: none;">
                         <input type="text" id="imageUrl" class="form-input mt-2"
-                            placeholder="Atau paste URL gambar disini...">
+                            placeholder="Atau paste URL foto disini...">
+                    </div>
+
+                    <div id="videoUploadArea" class="upload-area">
+                        <i class="fas fa-cloud-upload-alt fa-2x mb-2 text-primary"></i>
+                        <p class="mb-0">Klik untuk upload video</p>
+                        <p class="text-xs text-gray-500">Max 16MB (MP4, AVI, MOV)</p>
+                        <input type="file" id="videoInput" accept="video/*" style="display: none;">
+                        <input type="text" id="videoUrl" class="form-input mt-2"
+                            placeholder="Atau paste URL video disini...">
                     </div>
 
                     <div class="input-group">
@@ -232,6 +244,9 @@
         <i class="fas fa-bars"></i>
     </button>
 
+    <!-- Toast Notification Library -->
+    <script src="js/toast.js"></script>
+
     <!-- API Service -->
     <script src="js/api.js"></script>
 
@@ -239,26 +254,7 @@
         // Check authentication
         requireAuth();
 
-        // Global functions
-        function showAlert(type, message) {
-            const container = document.getElementById('alertContainer');
-            if (!container) return; // Guard clause
-
-            const alert = document.createElement('div');
-            alert.className = `alert alert-${type}`;
-            alert.innerHTML = `
-                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
-                <span>${message}</span>
-            `;
-
-            container.appendChild(alert);
-
-            // Auto remove
-            setTimeout(() => {
-                alert.style.opacity = '0';
-                setTimeout(() => alert.remove(), 300);
-            }, 3000);
-        }
+        // showAlert() function is now provided by toast.js library
 
         // State
         let currentMessageType = 'text';
@@ -282,13 +278,113 @@
                 tab.classList.toggle('active', tab.dataset.type === type);
             });
 
-            // Toggle Upload Area
-            const uploadArea = document.getElementById('imageUploadArea');
+            // Toggle Upload Areas
+            const imageUploadArea = document.getElementById('imageUploadArea');
+            const videoUploadArea = document.getElementById('videoUploadArea');
+
             if (type === 'image') {
-                uploadArea.classList.add('active');
+                imageUploadArea.classList.add('active');
+                videoUploadArea.classList.remove('active');
+            } else if (type === 'video') {
+                videoUploadArea.classList.add('active');
+                imageUploadArea.classList.remove('active');
             } else {
-                uploadArea.classList.remove('active');
+                imageUploadArea.classList.remove('active');
+                videoUploadArea.classList.remove('active');
             }
+        }
+
+        // Handle Image Upload Click
+        document.getElementById('imageUploadArea').addEventListener('click', function (e) {
+            if (e.target.id !== 'imageUrl' && e.target.tagName !== 'INPUT') {
+                document.getElementById('imageInput').click();
+            }
+        });
+
+        document.getElementById('imageInput').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Validate size (max 5MB for images)
+                if (file.size > 5 * 1024 * 1024) {
+                    showAlert('warning', 'Ukuran foto maksimal 5MB');
+                    this.value = '';
+                    return;
+                }
+
+                const uploadArea = document.getElementById('imageUploadArea');
+                uploadArea.innerHTML = `
+                    <i class="fas fa-check-circle fa-2x mb-2 text-success"></i>
+                    <p class="mb-0 font-semibold">${file.name}</p>
+                    <p class="text-xs text-gray-500">${(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                    <button type="button" class="btn btn-outline btn-sm mt-2" onclick="resetImageUpload()">
+                        <i class="fas fa-times"></i> Batalkan
+                    </button>
+                `;
+            }
+        });
+
+        // Handle Video Upload Click
+        document.getElementById('videoUploadArea').addEventListener('click', function (e) {
+            if (e.target.id !== 'videoUrl' && e.target.tagName !== 'INPUT') {
+                document.getElementById('videoInput').click();
+            }
+        });
+
+        document.getElementById('videoInput').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Validate size (max 16MB for videos)
+                if (file.size > 16 * 1024 * 1024) {
+                    showAlert('warning', 'Ukuran video maksimal 16MB');
+                    this.value = '';
+                    return;
+                }
+
+                const uploadArea = document.getElementById('videoUploadArea');
+                uploadArea.innerHTML = `
+                    <i class="fas fa-check-circle fa-2x mb-2 text-success"></i>
+                    <p class="mb-0 font-semibold">${file.name}</p>
+                    <p class="text-xs text-gray-500">${(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                    <button type="button" class="btn btn-outline btn-sm mt-2" onclick="resetVideoUpload()">
+                        <i class="fas fa-times"></i> Batalkan
+                    </button>
+                `;
+            }
+        });
+
+        function resetImageUpload() {
+            document.getElementById('imageInput').value = '';
+            document.getElementById('imageUploadArea').innerHTML = `
+                <i class="fas fa-cloud-upload-alt fa-2x mb-2 text-primary"></i>
+                <p class="mb-0">Klik untuk upload foto</p>
+                <input type="file" id="imageInput" accept="image/*" style="display: none;">
+                <input type="text" id="imageUrl" class="form-input mt-2" placeholder="Atau paste URL foto disini...">
+            `;
+            // Re-attach event listener
+            document.getElementById('imageUploadArea').addEventListener('click', function (e) {
+                if (e.target.id !== 'imageUrl' && e.target.tagName !== 'INPUT') {
+                    document.getElementById('imageInput').click();
+                }
+            });
+            document.getElementById('imageInput').addEventListener('change', arguments.callee);
+        }
+
+        function resetVideoUpload() {
+            document.getElementById('videoInput').value = '';
+            document.getElementById('videoUploadArea').innerHTML = `
+                <i class="fas fa-cloud-upload-alt fa-2x mb-2 text-primary"></i>
+                <p class="mb-0">Klik untuk upload video</p>
+                <p class="text-xs text-gray-500">Max 16MB (MP4, AVI, MOV)</p>
+                <input type="file" id="videoInput" accept="video/*" style="display: none;">
+                <input type="text" id="videoUrl" class="form-input mt-2" placeholder="Atau paste URL video disini...">
+            `;
+            // Re-attach event listener
+            document.getElementById('videoUploadArea').addEventListener('click', function (e) {
+                if (e.target.id !== 'videoUrl' && e.target.tagName !== 'INPUT') {
+                    document.getElementById('videoInput').click();
+                }
+            });
+            document.getElementById('videoInput').addEventListener('change', arguments.callee);
         }
 
         // Live Preview

@@ -80,6 +80,7 @@ app.use('/api/contacts', contactRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/stats', statsRoutes);
+app.use('/api/auto-replies', require('./routes/autoReply'));
 app.use('/api', sendRoutes);  // Simple /api/send endpoint
 
 // ============================================

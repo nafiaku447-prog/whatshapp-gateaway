@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/device.css">
     <link rel="stylesheet" href="css/settings.css">
+    <link rel="stylesheet" href="css/toast.css?v=3.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 
@@ -38,7 +39,7 @@
             <div class="nav-section">AUTOMATION</div>
             <div class="nav-item"><a href="auto-reply.html" class="nav-link"><i class="fas fa-robot"></i> <span>Auto
                         Reply</span></a></div>
-            <div class="nav-item"><a href="webhooks.html" class="nav-link"><i class="fas fa-webhook"></i>
+            <div class="nav-item"><a href="webhooks.html" class="nav-link"><i class="fas fa-link"></i>
                     <span>Webhooks</span></a></div>
             <div class="nav-section">ACCOUNT</div>
             <div class="nav-item"><a href="subscription.html" class="nav-link"><i class="fas fa-crown"></i>
@@ -68,7 +69,7 @@
             </div>
         </div>
 
-        <div id="alertContainer"></div>
+
 
         <div class="settings-grid">
             <!-- Navigation -->
@@ -78,9 +79,6 @@
                 </button>
                 <button class="settings-tab" onclick="switchTab('security')">
                     <i class="fas fa-lock"></i> Keamanan
-                </button>
-                <button class="settings-tab" onclick="switchTab('api')">
-                    <i class="fas fa-code"></i> API Key
                 </button>
                 <button class="settings-tab" onclick="switchTab('app')">
                     <i class="fas fa-sliders-h"></i> Aplikasi
@@ -144,34 +142,7 @@
                     </div>
                 </div>
 
-                <!-- API Panel -->
-                <div id="section-api" class="settings-panel">
-                    <div class="settings-section">
-                        <h2 class="section-title">API Key Anda</h2>
-                        <p class="mb-4 text-sm text-gray-600">Gunakan API Key ini untuk mengintegrasikan WA Gateway
-                            dengan aplikasi Anda.</p>
 
-                        <div class="api-key-box" id="apiKeyDisplay">
-                            ************************************
-                        </div>
-
-                        <div style="display:flex; gap:1rem;">
-                            <button class="btn btn-outline" onclick="toggleApiKey()">
-                                <i class="fas fa-eye"></i> Tampilkan
-                            </button>
-                            <button class="btn btn-outline" onclick="copyApiKey()">
-                                <i class="fas fa-copy"></i> Salin
-                            </button>
-                        </div>
-
-                        <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--gray-200);">
-                            <h4 style="color:red; margin-bottom:0.5rem;">Danger Zone</h4>
-                            <p class="text-sm text-gray-500 mb-2">Jika API Key bocor, segera generate ulang.</p>
-                            <button class="btn btn-danger btn-outline" onclick="regenerateApiKey()">Regenerate API
-                                Key</button>
-                        </div>
-                    </div>
-                </div>
 
                 <!-- App Panel -->
                 <div id="section-app" class="settings-panel">
@@ -209,6 +180,7 @@
         </div>
     </main>
 
+    <script src="js/toast.js"></script>
     <script src="js/api.js"></script>
     <script>
         requireAuth();
@@ -463,14 +435,7 @@
             }
         }
 
-        function showAlert(type, message) {
-            const container = document.getElementById('alertContainer');
-            const alert = document.createElement('div');
-            alert.className = `alert alert-${type}`;
-            alert.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> <span>${message}</span>`;
-            container.appendChild(alert);
-            setTimeout(() => { alert.style.opacity = '0'; setTimeout(() => alert.remove(), 300); }, 3000);
-        }
+        // showAlert() function is now provided by toast.js library
 
         function confirmLogout() {
             if (confirm('Apakah Anda yakin ingin logout?')) {

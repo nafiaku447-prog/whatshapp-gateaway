@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/device.css">
     <link rel="stylesheet" href="css/automation.css">
+    <link rel="stylesheet" href="css/toast.css?v=3.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 
@@ -38,7 +39,7 @@
             <div class="nav-section">AUTOMATION</div>
             <div class="nav-item"><a href="auto-reply.html" class="nav-link"><i class="fas fa-robot"></i> <span>Auto
                         Reply</span></a></div>
-            <div class="nav-item"><a href="webhooks.html" class="nav-link active"><i class="fas fa-webhook"></i>
+            <div class="nav-item"><a href="webhooks.html" class="nav-link active"><i class="fas fa-link"></i>
                     <span>Webhooks</span></a></div>
             <div class="nav-section">ACCOUNT</div>
             <div class="nav-item"><a href="subscription.html" class="nav-link"><i class="fas fa-crown"></i>
@@ -90,7 +91,7 @@
             </div>
         </div>
 
-        <div id="alertContainer"></div>
+
 
         <div style="display: grid; grid-template-columns: 2fr 1fr; gap: var(--spacing-lg);">
             <!-- Configuration -->
@@ -120,19 +121,19 @@
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
                                 <label
                                     style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; color: var(--gray-700);">
-                                    <input type="checkbox" checked> Pesan Masuk
+                                    <input type="checkbox" value="message" checked> Pesan Masuk
                                 </label>
                                 <label
                                     style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; color: var(--gray-700);">
-                                    <input type="checkbox" checked> Status Perangkat
+                                    <input type="checkbox" value="device" checked> Status Perangkat
                                 </label>
                                 <label
                                     style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; color: var(--gray-700);">
-                                    <input type="checkbox"> Pesan Terkirim
+                                    <input type="checkbox" value="ack"> Pesan Terkirim
                                 </label>
                                 <label
                                     style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; color: var(--gray-700);">
-                                    <input type="checkbox"> Scan QR
+                                    <input type="checkbox" value="qr"> Scan QR
                                 </label>
                             </div>
                         </div>
@@ -155,30 +156,97 @@
         </div>
     </main>
 
+    <script src="js/toast.js"></script>
     <script src="js/api.js"></script>
     <script>
         requireAuth();
 
-        // Mock Logic
-        document.getElementById('webhookForm').addEventListener('submit', (e) => {
+        async function loadWebhook() {
+            try {
+                // Fetch config from /api/webhooks
+                const config = await apiRequest('/webhooks');
+
+                if (config) {
+                    document.getElementById('webhookUrl').value = config.url || '';
+                    document.getElementById('webhookActive').checked = config.is_active;
+
+                    // Reset all checkboxes first
+                    document.querySelectorAll('#webhookForm input[type="checkbox"]').forEach(box => {
+                        if (box.id !== 'webhookActive') box.checked = false;
+                    });
+
+                    // Set checked based on events array
+                    const events = config.events || [];
+                    events.forEach(event => {
+                        const box = document.querySelector(`#webhookForm input[type="checkbox"][value="${event}"]`);
+                        if (box) box.checked = true;
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to load webhook config:', error);
+                // Don't show error to user as it might be empty
+            }
+        }
+
+        document.getElementById('webhookForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            showAlert('success', 'Konfigurasi webhook berhasil disimpan');
+
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            btn.disabled = true;
+
+            try {
+                const url = document.getElementById('webhookUrl').value;
+                const is_active = document.getElementById('webhookActive').checked;
+                const events = [];
+
+                // Collect checked events
+                document.querySelectorAll('#webhookForm input[type="checkbox"]').forEach(box => {
+                    if (box.id !== 'webhookActive' && box.checked) {
+                        events.push(box.value);
+                    }
+                });
+
+                await apiRequest('/webhooks', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url, is_active, events })
+                });
+
+                toastManager.success('Konfigurasi webhook berhasil disimpan');
+            } catch (error) {
+                toastManager.error('Gagal menyimpan: ' + error.message);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
         });
 
         async function testWebhook() {
             const url = document.getElementById('webhookUrl').value;
             if (!url) {
-                showAlert('danger', 'Masukkan URL Webhook terlebih dahulu');
+                toastManager.error('Masukkan URL Webhook terlebih dahulu');
                 return;
             }
 
-            // Simulate Test
-            showAlert('info', 'Mengirim test payload...');
+            toastManager.info('Mengirim test payload...');
+            addLog('SENDING...', 'PENDING');
 
-            setTimeout(() => {
-                addLog('POST', 200);
-                showAlert('success', 'Webhook test berhasil (200 OK)');
-            }, 1500);
+            try {
+                const result = await apiRequest('/webhooks/test', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url })
+                });
+
+                toastManager.success(`Berhasil! Status: ${result.status}`);
+                addLog('POST', result.status);
+
+            } catch (error) {
+                toastManager.error('Gagal: ' + error.message);
+                addLog('POST (FAIL)', 500);
+            }
         }
 
         function addLog(method, status) {
@@ -186,23 +254,18 @@
             const now = new Date().toLocaleTimeString();
             const logEntry = document.createElement('div');
             logEntry.className = 'log-entry';
+            const statusClass = (status >= 200 && status < 300) ? 'success' : 'error';
+
             logEntry.innerHTML = `
                 <div><span class="log-time">[${now}]</span> <span class="log-method">${method}</span></div>
-                <div class="log-status ${status === 200 ? 'success' : 'error'}">Status: ${status} OK</div>
+                <div class="log-status ${statusClass}">Status: ${status} ${status === 'PENDING' ? '' : (status === 200 ? 'OK' : '')}</div>
             `;
 
             if (logs.innerText.includes('Menunggu event')) logs.innerHTML = '';
             logs.prepend(logEntry);
         }
 
-        function showAlert(type, message) {
-            const container = document.getElementById('alertContainer');
-            const alert = document.createElement('div');
-            alert.className = `alert alert-${type}`;
-            alert.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> <span>${message}</span>`;
-            container.appendChild(alert);
-            setTimeout(() => { alert.style.opacity = '0'; setTimeout(() => alert.remove(), 300); }, 3000);
-        }
+        loadWebhook();
 
         function confirmLogout() {
             if (confirm('Apakah Anda yakin ingin logout?')) {

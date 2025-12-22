@@ -16,6 +16,7 @@
     <!-- Styles -->
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/device.css">
+    <link rel="stylesheet" href="css/toast.css?v=3.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
     <style>
@@ -323,7 +324,7 @@
             <div class="nav-section">AUTOMATION</div>
             <div class="nav-item"><a href="auto-reply.html" class="nav-link"><i class="fas fa-robot"></i> <span>Auto
                         Reply</span></a></div>
-            <div class="nav-item"><a href="webhooks.html" class="nav-link"><i class="fas fa-webhook"></i>
+            <div class="nav-item"><a href="webhooks.html" class="nav-link"><i class="fas fa-link"></i>
                     <span>Webhooks</span></a></div>
 
             <div class="nav-section">ACCOUNT</div>
@@ -378,7 +379,7 @@
             </div>
         </div>
 
-        <div id="alertContainer"></div>
+
 
         <!-- Billing Toggle -->
         <div class="pricing-toggle">
@@ -521,6 +522,7 @@
         </div>
     </main>
 
+    <script src="js/toast.js"></script>
     <script src="js/api.js"></script>
     <script>
         requireAuth();
@@ -588,7 +590,7 @@
             if (confirm(`Upgrade to ${plan.charAt(0).toUpperCase() + plan.slice(1)} plan for Rp ${formatPrice(price)}?\n\nThis is a mockup. Payment integration coming soon.`)) {
                 showAlert('info', `Redirecting to payment gateway... (Mockup)`);
                 setTimeout(() => {
-                    showAlert('success', `Successfully upgraded to ${plan.charAt(0).toUpperCase() + plan.slice(1)} plan! 🎉`);
+                    showAlert('success', `Successfully upgraded to ${plan.charAt(0).toUpperCase() + plan.slice(1)} plan! ??`);
                 }, 2000);
             }
         }
@@ -604,14 +606,7 @@
             element.classList.toggle('active');
         }
 
-        function showAlert(type, message) {
-            const container = document.getElementById('alertContainer');
-            const alert = document.createElement('div');
-            alert.className = `alert alert-${type}`;
-            alert.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : type === 'info' ? 'info-circle' : 'exclamation-circle'}"></i> <span>${message}</span>`;
-            container.appendChild(alert);
-            setTimeout(() => { alert.style.opacity = '0'; setTimeout(() => alert.remove(), 300); }, 3000);
-        }
+        // showAlert() function is now provided by toast.js library
 
         function confirmLogout() {
             if (confirm('Apakah Anda yakin ingin logout?')) {

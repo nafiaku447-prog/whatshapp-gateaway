@@ -33,6 +33,7 @@ class WhatsAppManager {
             fs.mkdirSync(this.sessionPath, { recursive: true });
         }
 
+        // Auto-cleanup old trash/locked folders on startup
         console.log('✅ WhatsApp Manager initialized');
     }
 
@@ -64,7 +65,9 @@ class WhatsAppManager {
                         '--disable-accelerated-2d-canvas',
                         '--no-first-run',
                         '--no-zygote',
-                        '--disable-gpu'
+                        '--disable-gpu',
+                        '--disable-logging',     // <-- Mencegah pembuatan chrome_debug.log
+                        '--log-level=3'          // <-- Hanya log fatal error
                     ]
                 }
             });
@@ -79,11 +82,56 @@ class WhatsAppManager {
             // Initialize the client
             await client.initialize();
 
-            return client;
-
         } catch (error) {
             console.error(`❌ Error initializing client for device ${deviceId}:`, error);
             this.connectionStatus.set(deviceId, 'error');
+            throw error;
+        }
+    }
+
+    /**
+     * Disconnect a device
+     */
+    async disconnectDevice(deviceId) {
+        try {
+            const client = this.clients.get(deviceId);
+
+            // Update status in memory immediately
+            this.connectionStatus.set(deviceId, 'disconnected');
+            if (this.clients.has(deviceId)) {
+                this.clients.delete(deviceId);
+            }
+            this.qrCodes.delete(deviceId);
+            this.qrRetries.delete(deviceId);
+
+            // Update database status
+            await query(
+                `UPDATE devices 
+                 SET status = 'disconnected', 
+                     is_active = false,
+                     qr_code = NULL,
+                     updated_at = NOW()
+                 WHERE id = $1`,
+                [deviceId]
+            );
+
+            if (client) {
+                console.log(`🔌 Disconnecting active device ${deviceId}...`);
+
+                // Destroy client
+                try {
+                    await client.destroy();
+                } catch (err) {
+                    console.error('Error destroying client:', err.message);
+                }
+
+                console.log(`✅ Device ${deviceId} disconnected successfully`);
+            } else {
+                console.log(`⚠️  No active client found for device ${deviceId}`);
+            }
+
+        } catch (error) {
+            console.error(`❌ Error disconnecting device ${deviceId}:`, error);
             throw error;
         }
     }
@@ -153,6 +201,9 @@ class WhatsAppManager {
                 this.connectionStatus.set(deviceId, 'scanning');
                 console.log(`✅ QR code saved for device ${deviceId}`);
 
+                // Trigger Webhook
+                this.triggerWebhook(deviceId, 'qr', { qr: qrDataURL });
+
                 // Also display in terminal for debugging
                 console.log(`\n📱 Device ${deviceId} (${deviceName}) - Scan this QR code:\n`);
                 qrcode.generate(qr, { small: true });
@@ -190,6 +241,9 @@ class WhatsAppManager {
                 this.connectionTimestamps.set(deviceId, Date.now());
 
                 console.log(`✅ Device ${deviceId} connected as:`, info.wid.user);
+
+                // Trigger Webhook
+                this.triggerWebhook(deviceId, 'device', { status: 'connected', phone: info.wid.user });
 
             } catch (error) {
                 console.error(`❌ Error updating device status for ${deviceId}:`, error);
@@ -319,8 +373,84 @@ class WhatsAppManager {
         client.on('message', async (message) => {
             console.log(`📩 Message received on device ${deviceId}:`, message.from);
 
-            // Here you can add message handling logic
-            // For example: save to database, trigger webhooks, auto-reply, etc.
+            try {
+                // 1. Check for Auto Replies
+                // Find active rules for this device (or user's global rules)
+                const rulesResult = await query(
+                    `SELECT r.* 
+                     FROM auto_replies r 
+                     JOIN devices d ON r.user_id = d.user_id 
+                     WHERE d.id = $1 
+                       AND r.is_active = true 
+                       AND (r.device_id IS NULL OR r.device_id = $1)
+                     ORDER BY r.created_at DESC`,
+                    [deviceId]
+                );
+
+                const messageBody = message.body.toLowerCase();
+
+                // Process rules
+                for (const rule of rulesResult.rows) {
+                    let match = false;
+                    // Split keywords by comma and trim for BOTH exact and contains
+                    const keywords = rule.keyword.toLowerCase().split(',').map(k => k.trim()).filter(k => k);
+
+                    // Check Match Type
+                    if (rule.match_type === 'exact') {
+                        if (keywords.includes(messageBody)) match = true;
+                    } else if (rule.match_type === 'contains') {
+                        // Check if ANY of the keywords are contained in the message
+                        if (keywords.some(k => messageBody.includes(k))) match = true;
+                    }
+
+                    // Check Reply Scope (All, Group, Private)
+                    // chat.isGroup is async, let's use getChat
+                    const chat = await message.getChat();
+                    if (rule.reply_to === 'group' && !chat.isGroup) match = false;
+                    if (rule.reply_to === 'private' && chat.isGroup) match = false;
+
+                    // Execute Reply
+                    if (match) {
+                        console.log(`🤖 Auto-reply triggered for device ${deviceId}: Match "${rule.keyword}"`);
+
+                        // Supports spintax or variables later? For now just simple text.
+                        // Trim to remove accidental newlines at the end
+                        const finalText = rule.response.trim();
+                        await message.reply(finalText);
+
+                        // Log outgoing message to database (so it counts in stats)
+                        try {
+                            const dbRes = await query(
+                                `INSERT INTO messages (user_id, device_id, recipient_phone, content, message_type, status, created_at)
+                                 VALUES ($1, $2, $3, $4, 'text', 'sent', NOW())
+                                 RETURNING id`,
+                                [rule.user_id, deviceId, message.from.replace('@c.us', ''), finalText]
+                            );
+                            console.log(`✅ Auto-reply saved to DB (ID: ${dbRes.rows[0].id})`);
+                        } catch (logErr) {
+                            console.error('❌ Failed to log auto-reply:', logErr.message);
+                        }
+
+                        // Break after first match to avoid spamming multiple replies
+                        break;
+                    }
+                }
+
+                // 2. Webhooks
+                this.triggerWebhook(deviceId, 'message', {
+                    id: message.id._serialized,
+                    from: message.from,
+                    to: message.to,
+                    body: message.body,
+                    timestamp: message.timestamp,
+                    hasMedia: message.hasMedia,
+                    type: message.type,
+                    pushname: message._data.notifyName
+                });
+
+            } catch (error) {
+                console.error(`❌ Error processing message on device ${deviceId}:`, error);
+            }
         });
 
         // Message create event - when a message is sent or received
@@ -415,94 +545,164 @@ class WhatsAppManager {
     /**
      * Disconnect a device
      */
+    /**
+     * Helper to clean up session files
+     */
+    async cleanupSession(deviceId) {
+        const fs = require('fs/promises');
+        const sessionDir = path.join(this.sessionPath, `session-device-${deviceId}`);
+
+        try {
+            await fs.access(sessionDir);
+            console.log(`🗑️  Cleaning up session files for device ${deviceId}...`);
+
+            // Try cleanup with retries
+            let attempts = 0;
+            const maxAttempts = 3;
+
+            while (attempts < maxAttempts) {
+                try {
+                    await fs.rm(sessionDir, { recursive: true, force: true, maxRetries: 3 });
+                    console.log(`🧹 Session cleanup successful for device ${deviceId}`);
+                    return; // Success
+                } catch (err) {
+                    attempts++;
+                    // If file doesn't exist, we are good
+                    if (err.code === 'ENOENT') return;
+
+                    if ((err.code === 'EBUSY' || err.code === 'EPERM') && attempts < maxAttempts) {
+                        console.log(`⏳ File locked (EBUSY), retrying cleanup (${attempts}/${maxAttempts})...`);
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                    } else if (attempts >= maxAttempts) {
+                        // FINAL FALLBACK: Rename the folder so it doesn't block new sessions
+                        console.log(`⚠️  Could not delete locked folder. Renaming it to move it out of the way.`);
+                        try {
+                            const trashPath = path.join(this.sessionPath, `_trash_device_${deviceId}_${Date.now()}`);
+                            await fs.rename(sessionDir, trashPath);
+                            console.log(`✅ Folder renamed to ${trashPath} (can be deleted later)`);
+                        } catch (renameErr) {
+                            console.error(`❌ Rename failed too: ${renameErr.message}`);
+                        }
+                    }
+                }
+            }
+        } catch (err) {
+            if (err.code !== 'ENOENT') {
+                console.log(`ℹ️  Session cleanup skipped for device ${deviceId}:`, err.message);
+            }
+        }
+    }
+
+    /**
+     * Disconnect a device
+     */
     async disconnectDevice(deviceId) {
         try {
             const client = this.clients.get(deviceId);
 
+            // Update status in memory immediately
+            this.connectionStatus.set(deviceId, 'disconnected');
+            if (this.clients.has(deviceId)) {
+                this.clients.delete(deviceId);
+            }
+            this.qrCodes.delete(deviceId);
+            this.qrRetries.delete(deviceId);
+
+            // Update database status
+            await query(
+                `UPDATE devices 
+                 SET status = 'disconnected', 
+                     is_active = false,
+                     qr_code = NULL,
+                     updated_at = NOW()
+                 WHERE id = $1`,
+                [deviceId]
+            );
+
             if (client) {
-                console.log(`🔌 Disconnecting device ${deviceId}...`);
+                console.log(`🔌 Disconnecting active device ${deviceId}...`);
+
+                // Aggressive cleanup: Get PID first to ensure we can kill it
+                let browserPid = null;
+                try {
+                    if (client.pupBrowser) {
+                        const proc = client.pupBrowser.process();
+                        if (proc) browserPid = proc.pid;
+                    }
+                } catch (e) { }
 
                 // Destroy client and wait for browser to fully close
-                await client.destroy();
+                try {
+                    await client.destroy();
+                } catch (err) {
+                    console.error('Error destroying client:', err.message);
+                }
 
-                // Give browser process time to fully terminate
-                await new Promise(resolve => setTimeout(resolve, 2000));
+                // Force Kill Browser Process using Windows TaskKill (More effective)
+                if (browserPid) {
+                    try {
+                        console.log(`🔫 killing Chrome process tree (PID: ${browserPid})...`);
+                        // /T = Terminate child processes (Tabs, GPU process, etc)
+                        // /F = Force termination
+                        require('child_process').exec(`taskkill /pid ${browserPid} /T /F`, (err) => {
+                            // Ignore error if process already dead
+                        });
+                    } catch (e) { }
+                }
 
-                this.clients.delete(deviceId);
-                this.qrCodes.delete(deviceId);
-                this.qrRetries.delete(deviceId);
-                this.connectionStatus.delete(deviceId);
-
-                // Update database
-                await query(
-                    `UPDATE devices 
-                     SET status = 'disconnected', 
-                         is_active = false,
-                         qr_code = NULL,
-                         updated_at = NOW()
-                     WHERE id = $1`,
-                    [deviceId]
-                );
+                // Give OS time to close file handles
+                console.log(`⏳ Scheduling session cleanup for device ${deviceId}...`);
+                setTimeout(() => this.cleanupSession(deviceId), 2000); // 2s is enough after taskkill
 
                 console.log(`✅ Device ${deviceId} disconnected successfully`);
-
-                // Optional: Clean up session files after manual disconnect
-                // Wait longer to ensure all file handles are released
-                setTimeout(async () => {
-                    const fs = require('fs/promises');
-                    const sessionDir = path.join(this.sessionPath, `session-device-${deviceId}`);
-
-                    try {
-                        await fs.access(sessionDir);
-                        console.log(`🗑️  Cleaning up session files for manually disconnected device ${deviceId}...`);
-
-                        // Try cleanup with retries
-                        let attempts = 0;
-                        const maxAttempts = 3;
-
-                        while (attempts < maxAttempts) {
-                            try {
-                                await fs.rm(sessionDir, { recursive: true, force: true, maxRetries: 3 });
-                                console.log(`🧹 Session cleanup successful for device ${deviceId}`);
-                                break;
-                            } catch (err) {
-                                attempts++;
-                                if (err.code === 'ENOENT') break;
-                                if ((err.code === 'EBUSY' || err.code === 'EPERM') && attempts < maxAttempts) {
-                                    console.log(`⏳ Retrying cleanup for device ${deviceId}... (${attempts}/${maxAttempts})`);
-                                    await new Promise(resolve => setTimeout(resolve, 3000));
-                                } else if (attempts >= maxAttempts) {
-                                    console.log(`ℹ️  Session cleanup will be retried later for device ${deviceId}`);
-                                }
-                            }
-                        }
-                    } catch (err) {
-                        if (err.code !== 'ENOENT') {
-                            console.log(`ℹ️  Session cleanup skipped for device ${deviceId}:`, err.message);
-                        }
-                    }
-                }, 8000); // Wait 8 seconds before cleanup
             } else {
-                console.log(`⚠️  No active client found for device ${deviceId}`);
-
-                // Still update database status
-                await query(
-                    `UPDATE devices 
-                     SET status = 'disconnected', 
-                         is_active = false,
-                         qr_code = NULL,
-                         updated_at = NOW()
-                     WHERE id = $1`,
-                    [deviceId]
-                );
+                console.log(`⚠️  No active client found for device ${deviceId}, forcing session cleanup`);
+                // Force cleanup immediate
+                this.cleanupSession(deviceId);
             }
-
-            // NOTE: Session folder cleanup is optional on disconnect
-            // If you want to preserve session for quick reconnect, comment out the cleanup code above
 
         } catch (error) {
             console.error(`❌ Error disconnecting device ${deviceId}:`, error);
             throw error;
+        }
+    }
+
+    /**
+     * Trigger Webhook
+     */
+    async triggerWebhook(deviceId, eventType, data) {
+        try {
+            // Cache query? For now DB query is fine (low volume)
+            const webhookResult = await query(
+                `SELECT w.url, w.events 
+                 FROM webhooks w 
+                 JOIN devices d ON w.user_id = d.user_id 
+                 WHERE d.id = $1 AND w.is_active = true`,
+                [deviceId]
+            );
+
+            if (webhookResult.rows.length > 0) {
+                const webhook = webhookResult.rows[0];
+                // Check event subscription
+                if (webhook.events && webhook.events.includes(eventType)) {
+                    // console.log(`🪝 Webhook '${eventType}' -> ${webhook.url}`);
+
+                    const payload = {
+                        event: eventType,
+                        device_id: deviceId,
+                        timestamp: new Date().toISOString(),
+                        data: data
+                    };
+
+                    fetch(webhook.url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    }).catch(err => console.error(`Webhook delivery failed (${eventType}):`, err.message));
+                }
+            }
+        } catch (error) {
+            console.error('Error triggering webhook:', error);
         }
     }
 

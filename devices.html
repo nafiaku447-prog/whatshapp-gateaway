@@ -16,6 +16,7 @@
     <!-- Main Styles -->
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/device.css">
+    <link rel="stylesheet" href="css/toast.css?v=3.0">
 
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -89,7 +90,7 @@
 
             <div class="nav-item">
                 <a href="webhooks.html" class="nav-link">
-                    <i class="fas fa-webhook"></i>
+                    <i class="fas fa-link"></i>
                     <span>Webhooks</span>
                 </a>
             </div>
@@ -163,8 +164,6 @@
             </div>
         </div>
 
-        <!-- Alert Container -->
-        <div id="alertContainer"></div>
 
         <!-- Devices Grid -->
         <div class="devices-grid" id="devicesGrid">
@@ -340,10 +339,58 @@
         </div>
     </div>
 
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay" id="deleteConfirmModal">
+        <div class="modal-content" style="max-width: 450px;">
+            <div class="modal-header" style="border-bottom: none; padding-bottom: 0;">
+                <button class="modal-close" onclick="closeDeleteModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div style="text-align: center; padding: 1rem 2rem 2rem;">
+                <!-- Icon Warning -->
+                <div
+                    style="width: 80px; height: 80px; margin: 0 auto 1.5rem; background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.15) 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 2.5rem; color: #ef4444;"></i>
+                </div>
+
+                <!-- Title -->
+                <h3
+                    style="margin: 0 0 0.75rem 0; font-size: 1.5rem; font-weight: 700; color: #1f2937; font-family: 'Outfit', sans-serif;">
+                    Hapus Perangkat?
+                </h3>
+
+                <!-- Description -->
+                <p style="margin: 0 0 2rem 0; color: #6b7280; font-size: 0.938rem; line-height: 1.6;">
+                    Apakah Anda yakin ingin menghapus perangkat <strong id="deleteDeviceName"
+                        style="color: #374151;"></strong>?
+                    Tindakan ini tidak dapat dibatalkan.
+                </p>
+
+                <!-- Action Buttons -->
+                <div style="display: flex; gap: 0.75rem; justify-content: center;">
+                    <button class="btn btn-outline" onclick="closeDeleteModal()" style="min-width: 120px;">
+                        <i class="fas fa-times"></i>
+                        <span>Batal</span>
+                    </button>
+                    <button class="btn btn-danger" id="confirmDeleteBtn" onclick="confirmDelete()"
+                        style="min-width: 120px; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);">
+                        <i class="fas fa-trash"></i>
+                        <span>Ya, Hapus</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Mobile Menu Toggle -->
     <button class="menu-toggle" id="menuToggle" onclick="toggleSidebar()">
         <i class="fas fa-bars"></i>
     </button>
+
+    <!-- Toast Notification Library -->
+    <script src="js/toast.js"></script>
 
     <!-- API Service -->
     <script src="js/api.js"></script>
@@ -369,22 +416,10 @@
                 clearInterval(refreshInterval);
             }
 
-            // Auto-refresh every 10 seconds to keep stats updated in real-time
+            // Auto-refresh every 2 seconds to keep stats updated in real-time
             refreshInterval = setInterval(() => {
-                const hasConnecting = devices.some(d =>
-                    d.status === 'scanning' ||
-                    d.status === 'initializing' ||
-                    d.status === 'authenticated'
-                );
-
-                // Refresh more frequently (5s) if connecting, otherwise 10s for stats
-                if (hasConnecting) {
-                    loadDevices();
-                } else {
-                    // Still refresh but less frequently to update message counts
-                    loadDevices();
-                }
-            }, 10000); // 10 seconds for real-time feel
+                loadDevices();
+            }, 2000);
         }
 
         // Load devices from API
@@ -434,6 +469,13 @@
 
         // Update existing device card with new data
         function updateDeviceCard(card, device) {
+            // Check if status has changed (compare with stored status)
+            const currentStatus = card.getAttribute('data-status');
+            const statusChanged = currentStatus !== device.status;
+
+            // Store new status
+            card.setAttribute('data-status', device.status);
+
             // Update status badge
             const statusBadge = card.querySelector('.status-badge');
             if (statusBadge) {
@@ -446,29 +488,128 @@
                 statusBadge.textContent = newStatusText;
             }
 
-            // Update message count
-            const messageCountEl = card.querySelector('.stat-value');
-            if (messageCountEl) {
-                const newCount = device.messages_today || 0;
-                if (messageCountEl.textContent !== newCount.toString()) {
-                    messageCountEl.textContent = newCount;
-                    // Add flash animation
-                    messageCountEl.style.animation = 'none';
-                    setTimeout(() => {
-                        messageCountEl.style.animation = 'flash 0.5s ease';
-                    }, 10);
-                }
-            }
+            // If status changed significantly, rebuild the card content area
+            if (statusChanged) {
+                const contentArea = card.querySelector('.device-header').nextElementSibling;
+                const actionsArea = card.querySelector('.device-actions');
 
-            // Update QR code if status changed to scanning
-            const qrContainer = card.querySelector(`#qr-container-${device.id}`);
-            if (qrContainer && device.status === 'scanning' && device.qr_code) {
-                qrContainer.innerHTML = `
-                    <img src="${device.qr_code}" alt="QR Code" class="qr-image">
-                    <p style="text-align:center; margin-top:5px; color: #64748b; font-size: 0.85rem; font-weight: 500;">
-                        <i class="fas fa-camera" style="margin-right: 5px;"></i> Scan dengan WhatsApp
-                    </p>
-                `;
+                // Remove old content (stats or qr)
+                if (contentArea && contentArea !== actionsArea) {
+                    contentArea.remove();
+                }
+
+                // Build new content based on status
+                let newContent = '';
+
+                if (device.status === 'connected') {
+                    // Show stats
+                    newContent = `
+                        <div class="device-stats">
+                            <div class="stat-item">
+                                <div class="stat-label">Pesan Hari Ini</div>
+                                <div class="stat-value">${device.messages_today || 0}</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">Online Sejak</div>
+                                <div class="stat-value">${formatTime(device.last_seen)}</div>
+                            </div>
+                        </div>
+                    `;
+                } else if (device.status === 'scanning' && device.qr_code) {
+                    // Show QR code
+                    newContent = `
+                        <div class="device-qr active" id="qr-container-${device.id}">
+                            <img src="${device.qr_code}" alt="QR Code" class="qr-image">
+                            <p style="text-align:center; margin-top:5px; color: #64748b; font-size: 0.85rem; font-weight: 500;">
+                                <i class="fas fa-camera" style="margin-right: 5px;"></i> Scan dengan WhatsApp
+                            </p>
+                        </div>
+                    `;
+                } else if (device.status === 'initializing' || device.status === 'scanning' || device.status === 'authenticated') {
+                    // Show loading
+                    newContent = `
+                        <div class="device-qr active" id="qr-container-${device.id}">
+                            <div class="qr-placeholder" style="padding: 2rem 0;">
+                                <div class="loading" style="margin: 0 auto 15px; border-color: var(--primary) transparent var(--primary) transparent;"></div>
+                                <p style="color: var(--text-dark); font-weight: 500;">Memuat QR Code...</p>
+                                <p style="font-size: 12px; color: #94a3b8;">Status: ${device.status}</p>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // Disconnected - show placeholder
+                    newContent = `
+                        <div class="device-qr" id="qr-container-${device.id}">
+                            <div class="qr-placeholder">
+                                <i class="fas fa-qrcode"></i>
+                                <p>Klik "Scan QR" untuk menghubungkan</p>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Insert new content before actions
+                if (actionsArea && newContent) {
+                    actionsArea.insertAdjacentHTML('beforebegin', newContent);
+                }
+
+                // Update action buttons
+                if (actionsArea) {
+                    if (device.status === 'connected') {
+                        actionsArea.innerHTML = `
+                            <button class="btn btn-outline btn-sm" onclick="viewDevice(${device.id})">
+                                <i class="fas fa-eye"></i>
+                                Lihat Detail
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="disconnectDevice(${device.id})">
+                                <i class="fas fa-unlink"></i>
+                                Putuskan
+                            </button>
+                        `;
+                    } else {
+                        actionsArea.innerHTML = `
+                            <button class="btn btn-primary btn-sm" onclick="connectDevice(${device.id}, this)">
+                                <i class="fas fa-qrcode"></i>
+                                Scan QR
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteDevice(${device.id})">
+                                <i class="fas fa-trash"></i>
+                                Hapus
+                            </button>
+                        `;
+                    }
+                }
+            } else {
+                // Status not changed, just update dynamic values
+
+                // Update message count if we have stats displayed
+                const messageCountEl = card.querySelector('.stat-value');
+                if (messageCountEl) {
+                    const newCount = device.messages_today || 0;
+                    if (messageCountEl.textContent !== newCount.toString()) {
+                        messageCountEl.textContent = newCount;
+                        // Add flash animation
+                        messageCountEl.style.animation = 'none';
+                        setTimeout(() => {
+                            messageCountEl.style.animation = 'flash 0.5s ease';
+                        }, 10);
+                    }
+                }
+
+                // Update QR code if still scanning
+                const qrContainer = card.querySelector(`#qr-container-${device.id}`);
+                if (qrContainer && device.status === 'scanning' && device.qr_code) {
+                    // Only update if QR is different or missing
+                    const existingImg = qrContainer.querySelector('.qr-image');
+                    if (!existingImg || existingImg.src !== device.qr_code) {
+                        qrContainer.innerHTML = `
+                            <img src="${device.qr_code}" alt="QR Code" class="qr-image">
+                            <p style="text-align:center; margin-top:5px; color: #64748b; font-size: 0.85rem; font-weight: 500;">
+                                <i class="fas fa-camera" style="margin-right: 5px;"></i> Scan dengan WhatsApp
+                            </p>
+                        `;
+                    }
+                }
             }
         }
 
@@ -477,6 +618,8 @@
             const card = document.createElement('div');
             card.className = 'device-card';
             card.setAttribute('data-device-id', device.id);
+            card.setAttribute('data-status', device.status); // Track initial status
+
 
             const statusClass = device.status === 'connected' ? 'connected' :
                 device.status === 'scanning' ? 'scanning' : 'disconnected';
@@ -671,18 +814,51 @@
             }
         }
 
-        async function deleteDevice(id) {
-            if (!confirm('Yakin ingin menghapus perangkat ini?')) return;
+        // Delete Device - Show Modal
+        let deviceToDelete = null;
+
+        function deleteDevice(id) {
+            // Find device name
+            const device = devices.find(d => d.id === id);
+            const deviceName = device ? device.device_name : 'perangkat ini';
+
+            // Store ID for later
+            deviceToDelete = id;
+
+            // Update modal content
+            document.getElementById('deleteDeviceName').textContent = deviceName;
+
+            // Show modal
+            document.getElementById('deleteConfirmModal').classList.add('active');
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteConfirmModal').classList.remove('active');
+            deviceToDelete = null;
+        }
+
+        async function confirmDelete() {
+            if (!deviceToDelete) return;
+
+            const btn = document.getElementById('confirmDeleteBtn');
+            const originalContent = btn.innerHTML;
 
             try {
-                await apiRequest(`/devices/${id}`, {
+                // Show loading state
+                btn.disabled = true;
+                btn.innerHTML = '<div class="loading" style="width:16px;height:16px;border-width:2px;display:inline-block;vertical-align:middle;margin-right:5px;"></div> Menghapus...';
+
+                await apiRequest(`/devices/${deviceToDelete}`, {
                     method: 'DELETE'
                 });
 
-                showAlert('success', 'Perangkat berhasil dihapus');
+                toastManager.success('Perangkat berhasil dihapus!');
+                closeDeleteModal();
                 loadDevices();
             } catch (error) {
-                showAlert('danger', 'Gagal menghapus perangkat: ' + error.message);
+                toastManager.error('Gagal menghapus perangkat: ' + error.message);
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
             }
         }
 
@@ -819,22 +995,8 @@
             }
         }
 
-        // Show alert
-        function showAlert(type, message) {
-            const container = document.getElementById('alertContainer');
-            const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+        // showAlert() function is now provided by toast.js library
 
-            container.innerHTML = `
-                <div class="alert ${alertClass}">
-                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
-                    ${message}
-                </div>
-            `;
-
-            setTimeout(() => {
-                container.innerHTML = '';
-            }, 5000);
-        }
 
         // Loading helpers
         function showLoading(btn) {
@@ -865,6 +1027,13 @@
         document.getElementById('addDeviceModal').addEventListener('click', function (e) {
             if (e.target === this) {
                 closeAddDeviceModal();
+            }
+        });
+
+        // Close delete modal on outside click
+        document.getElementById('deleteConfirmModal').addEventListener('click', function (e) {
+            if (e.target === this) {
+                closeDeleteModal();
             }
         });
 

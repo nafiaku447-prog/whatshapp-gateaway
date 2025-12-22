@@ -15,6 +15,7 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/device.css">
     <link rel="stylesheet" href="css/automation.css">
+    <link rel="stylesheet" href="css/toast.css?v=3.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 
@@ -39,7 +40,7 @@
             <div class="nav-section">AUTOMATION</div>
             <div class="nav-item"><a href="auto-reply.html" class="nav-link active"><i class="fas fa-robot"></i>
                     <span>Auto Reply</span></a></div>
-            <div class="nav-item"><a href="webhooks.html" class="nav-link"><i class="fas fa-webhook"></i>
+            <div class="nav-item"><a href="webhooks.html" class="nav-link"><i class="fas fa-link"></i>
                     <span>Webhooks</span></a></div>
             <div class="nav-section">ACCOUNT</div>
             <div class="nav-item"><a href="subscription.html" class="nav-link"><i class="fas fa-crown"></i>
@@ -88,13 +89,22 @@
                     <h1 class="page-title">Auto Reply</h1>
                     <p class="page-subtitle">Otomatisasi balasan pesan WhatsApp</p>
                 </div>
-                <button class="btn btn-primary" onclick="openAddRuleModal()">
-                    <i class="fas fa-plus"></i> Tambah Rule
-                </button>
+                <div style="display:flex; gap:0.5rem;">
+                    <button class="btn btn-outline" onclick="exportRules()" title="Export Rules">
+                        <i class="fas fa-file-export"></i> Export
+                    </button>
+                    <button class="btn btn-outline" onclick="triggerImport()" title="Import Rules">
+                        <i class="fas fa-file-import"></i> Import
+                    </button>
+                    <button class="btn btn-primary" onclick="openAddRuleModal()">
+                        <i class="fas fa-plus"></i> Tambah Rule
+                    </button>
+                    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importRules(this)">
+                </div>
             </div>
         </div>
 
-        <div id="alertContainer"></div>
+
 
         <div id="rulesList">
             <!-- Example Rule -->
@@ -110,6 +120,7 @@
                 <button class="modal-close" onclick="closeAddRuleModal()"><i class="fas fa-times"></i></button>
             </div>
             <form id="addRuleForm">
+                <input type="hidden" id="ruleId">
                 <div class="form-group">
                     <label class="form-label">Keyword</label>
                     <input type="text" id="ruleKeyword" class="form-input" placeholder="Contoh: halo, info, bantuan"
@@ -118,10 +129,14 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">Tipe Pencocokan</label>
-                    <select id="ruleType" class="form-input">
+                    <select id="ruleType" class="form-input" onchange="updateMatchTypeInfo()">
                         <option value="exact">Sama Persis (Exact)</option>
                         <option value="contains">Mengandung (Contains)</option>
                     </select>
+                    <small id="matchTypeInfo"
+                        style="display:block; margin-top:0.5rem; color:var(--gray-500); font-size: 0.8rem;">
+                        <i class="fas fa-info-circle"></i> Pesan harus 100% sama dengan keyword (Contoh: "menu")
+                    </small>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Respon Balasan</label>
@@ -140,97 +155,260 @@
         </div>
     </div>
 
+    <script src="js/toast.js"></script>
     <script src="js/api.js"></script>
     <script>
         requireAuth();
 
         // Mock Rules Data (Replace with API call)
-        let rules = [
-            { id: 1, keyword: 'halo, hi, ping', type: 'exact', response: 'Halo! Ada yang bisa kami bantu? Ketik MENU untuk melihat pilihan.', active: true },
-            { id: 2, keyword: 'menu', type: 'exact', response: 'Berikut adalah menu kami:\n1. Produk\n2. Harga\n3. Lokasi', active: true },
-            { id: 3, keyword: 'harga', type: 'contains', response: 'Daftar harga bisa dilihat di website kami: example.com/pricing', active: false }
-        ];
+        let rules = []; // Will be fetched from API
 
-        function loadRules() {
-            // In a real app: const response = await apiRequest('/auto-replies');
-            const container = document.getElementById('rulesList');
-            container.innerHTML = '';
+        async function loadRules() {
+            try {
+                const response = await apiRequest('/auto-replies');
+                rules = response; // Store locally for easier editing
 
-            if (rules.length === 0) {
-                container.innerHTML = `<div class="empty-state"><h3>Belum ada rule</h3><p>Buat rule pertama Anda.</p></div>`;
-                return;
+                const container = document.getElementById('rulesList');
+                container.innerHTML = '';
+
+                if (rules.length === 0) {
+                    container.innerHTML = `<div class="empty-state"><h3>Belum ada rule</h3><p>Buat rule pertama Anda.</p></div>`;
+                    return;
+                }
+
+                rules.forEach(rule => {
+                    const card = document.createElement('div');
+                    card.className = `rule-card ${rule.is_active ? 'active' : ''}`;
+                    card.innerHTML = `
+                        <div class="rule-header">
+                            <div>
+                                <span class="rule-keyword-badge">${rule.keyword}</span>
+                                <span class="rule-type-badge">${rule.match_type}</span>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" ${rule.is_active ? 'checked' : ''} onchange="toggleRule(${rule.id})">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="rule-response">${rule.response.replace(/\n/g, '<br>')}</div>
+                        <div class="rule-meta">
+                            <span>Target: ${rule.reply_to === 'all' ? 'Semua' : rule.reply_to}</span>
+                            <div>
+                                <button class="btn btn-outline btn-sm" onclick="editRule(${rule.id})" style="padding: 0.25rem 0.5rem;"><i class="fas fa-edit"></i></button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteRule(${rule.id})" style="padding: 0.25rem 0.5rem;"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            } catch (error) {
+                toastManager.error('Gagal memuat rules: ' + error.message);
+                console.error(error);
             }
-
-            rules.forEach(rule => {
-                const card = document.createElement('div');
-                card.className = `rule-card ${rule.active ? 'active' : ''}`;
-                card.innerHTML = `
-                    <div class="rule-header">
-                        <div>
-                            <span class="rule-keyword-badge">${rule.keyword}</span>
-                            <span class="rule-type-badge">${rule.type}</span>
-                        </div>
-                        <label class="switch">
-                            <input type="checkbox" ${rule.active ? 'checked' : ''} onchange="toggleRule(${rule.id})">
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    <div class="rule-response">${rule.response.replace(/\n/g, '<br>')}</div>
-                    <div class="rule-meta">
-                        <span>Dibalas ke semua pengirim</span>
-                        <div>
-                            <button class="btn btn-outline btn-sm" onclick="editRule(${rule.id})" style="padding: 0.25rem 0.5rem;"><i class="fas fa-edit"></i></button>
-                            <button class="btn btn-danger btn-sm" onclick="deleteRule(${rule.id})" style="padding: 0.25rem 0.5rem;"><i class="fas fa-trash"></i></button>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
         }
 
-        function openAddRuleModal() { document.getElementById('addRuleModal').classList.add('active'); }
-        function closeAddRuleModal() { document.getElementById('addRuleModal').classList.remove('active'); document.getElementById('addRuleForm').reset(); }
+        function openAddRuleModal() {
+            document.getElementById('addRuleModal').classList.add('active');
+            // Reset form hidden id if any
+            document.getElementById('ruleId').value = '';
+            document.getElementById('addRuleForm').reset();
+            document.querySelector('#addRuleModal .modal-title').textContent = 'Tambah Rule Baru';
+            updateMatchTypeInfo();
+        }
 
-        document.getElementById('addRuleForm').addEventListener('submit', function (e) {
+        function closeAddRuleModal() {
+            document.getElementById('addRuleModal').classList.remove('active');
+            document.getElementById('addRuleForm').reset();
+            updateMatchTypeInfo();
+        }
+
+        function updateMatchTypeInfo() {
+            const type = document.getElementById('ruleType').value;
+            const info = document.getElementById('matchTypeInfo');
+            if (!info) return;
+            if (type === 'exact') {
+                info.innerHTML = '<i class="fas fa-info-circle"></i> Pesan harus <b>100% sama persis</b> dengan keyword. (Contoh: Ketik "menu" → Dibalas. Ketik "menu dong" → Tidak)';
+            } else {
+                info.innerHTML = '<i class="fas fa-info-circle"></i> Pesan cukup <b>mengandung kata</b> keyword. (Contoh: Keyword "harga". Ketik "cek harga dong" → Dibalas)';
+            }
+        }
+
+        // Handle Add/Edit Form Submit
+        // Note: You need to add <input type="hidden" id="ruleId"> to your form in HTML
+        document.getElementById('addRuleForm').addEventListener('submit', async function (e) {
             e.preventDefault();
-            showAlert('success', 'Auto reply rule berhasil disimpan');
-            // Add mock logic to update list
-            const kw = document.getElementById('ruleKeyword').value;
-            const resp = document.getElementById('ruleResponse').value;
-            rules.push({ id: Date.now(), keyword: kw, type: document.getElementById('ruleType').value, response: resp, active: document.getElementById('ruleActive').checked });
-            closeAddRuleModal();
-            loadRules();
+
+            const btn = this.querySelector('button[type="submit"]');
+            const originalContent = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+            const id = document.getElementById('ruleId')?.value;
+            const payload = {
+                keyword: document.getElementById('ruleKeyword').value,
+                match_type: document.getElementById('ruleType').value,
+                response: document.getElementById('ruleResponse').value,
+                reply_to: 'all', // Default or add select to form
+                is_active: document.getElementById('ruleActive').checked
+            };
+
+            try {
+                if (id) {
+                    // Update
+                    await apiRequest(`/auto-replies/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    toastManager.success('Auto reply rule berhasil diperbarui');
+                } else {
+                    // Create
+                    await apiRequest('/auto-replies', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    toastManager.success('Auto reply rule berhasil dibuat');
+                }
+
+                closeAddRuleModal();
+                loadRules();
+            } catch (error) {
+                toastManager.error('Gagal menyimpan rule: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalContent;
+            }
         });
 
-        function toggleRule(id) {
-            const rule = rules.find(r => r.id === id);
-            if (rule) {
-                rule.active = !rule.active;
-                loadRules();
-                // Call API
+        async function toggleRule(id) {
+            try {
+                await apiRequest(`/auto-replies/${id}/toggle`, { method: 'PATCH' });
+                // No need to reload whole list, just toggle class? Better reload to be safe.
+                // toastManager.info('Status updated');
+                // loadRules(); 
+                // Just update local array to reflect UI change or do nothing if optimistic UI
+            } catch (error) {
+                toastManager.error('Gagal update status: ' + error.message);
+                loadRules(); // Revert on error
             }
         }
 
-        function deleteRule(id) {
+        async function deleteRule(id) {
             if (confirm('Hapus rule ini?')) {
-                rules = rules.filter(r => r.id !== id);
-                loadRules();
-                showAlert('success', 'Rule dihapus');
+                try {
+                    await apiRequest(`/auto-replies/${id}`, { method: 'DELETE' });
+                    toastManager.success('Rule dihapus');
+                    loadRules();
+                } catch (error) {
+                    toastManager.error('Gagal menghapus: ' + error.message);
+                }
             }
         }
 
         function editRule(id) {
-            // Populate form and open modal (simplified)
-            showAlert('info', 'Edit feature coming soon (Mockup)');
+            const rule = rules.find(r => r.id === id);
+            if (!rule) return;
+
+            // Populate form
+            document.getElementById('ruleKeyword').value = rule.keyword;
+            document.getElementById('ruleType').value = rule.match_type;
+            document.getElementById('ruleResponse').value = rule.response;
+            document.getElementById('ruleActive').checked = rule.is_active;
+
+            // Set hidden ID (we need to ensure this input exists!)
+            let idInput = document.getElementById('ruleId');
+            if (!idInput) {
+                // If it doesn't exist, create it dynamically or user needs to add it to HTML.
+                // I will inject it dynamically if missing to be safe
+                idInput = document.createElement('input');
+                idInput.type = 'hidden';
+                idInput.id = 'ruleId';
+                document.getElementById('addRuleForm').appendChild(idInput);
+            }
+            idInput.value = rule.id;
+
+            // Change Title
+            document.querySelector('#addRuleModal .modal-title').textContent = 'Edit Rule Auto Reply';
+
+            document.getElementById('addRuleModal').classList.add('active');
         }
 
-        function showAlert(type, message) {
-            const container = document.getElementById('alertContainer');
-            const alert = document.createElement('div');
-            alert.className = `alert alert-${type}`;
-            alert.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> <span>${message}</span>`;
-            container.appendChild(alert);
-            setTimeout(() => { alert.style.opacity = '0'; setTimeout(() => alert.remove(), 300); }, 3000);
+        function exportRules() {
+            if (!rules || rules.length === 0) {
+                toastManager.warning('Tidak ada rule untuk diexport');
+                return;
+            }
+            // Clean data for export
+            const cleanRules = rules.map(r => ({
+                keyword: r.keyword,
+                match_type: r.match_type,
+                response: r.response,
+                reply_to: r.reply_to || 'all',
+                is_active: r.is_active
+            }));
+
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(cleanRules, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "wa_autoreply_rules.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        }
+
+        function triggerImport() {
+            document.getElementById('importFile').click();
+        }
+
+        async function importRules(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async function (e) {
+                try {
+                    const importedRules = JSON.parse(e.target.result);
+                    if (!Array.isArray(importedRules)) throw new Error('Format file tidak valid. Harus array JSON.');
+
+                    let successCount = 0;
+                    toastManager.info('Sedang mengimport rules...');
+
+                    for (const rule of importedRules) {
+                        // Validate minimal fields
+                        if (!rule.keyword || !rule.response) continue;
+
+                        try {
+                            await apiRequest('/auto-replies', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    keyword: rule.keyword,
+                                    match_type: rule.match_type || 'exact',
+                                    response: rule.response,
+                                    reply_to: rule.reply_to || 'all',
+                                    is_active: rule.is_active !== false
+                                })
+                            });
+                            successCount++;
+                        } catch (err) {
+                            console.error('Import skip:', err);
+                        }
+                    }
+
+                    if (successCount > 0) {
+                        toastManager.success(`Import selesai: ${successCount} rule ditambahkan.`);
+                        loadRules();
+                    } else {
+                        toastManager.warning('Tidak ada rule valid yang diimport.');
+                    }
+                } catch (error) {
+                    toastManager.error('Eror file JSON: ' + error.message);
+                } finally {
+                    input.value = '';
+                }
+            };
+            reader.readAsText(file);
         }
 
         function confirmLogout() {
@@ -240,6 +418,11 @@
                 window.location.href = 'login.html';
             }
         }
+
+        // Close modal on outside click
+        document.getElementById('addRuleModal').addEventListener('click', function (e) {
+            if (e.target === this) closeAddRuleModal();
+        });
 
         loadRules();
     </script>
