@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - System Monitor | WA Gateway</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <link rel="stylesheet" href="css/admin-dashboard.css">
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <i class="fas fa-server"></i>
+                <span>Admin <span class="highlight">Dashboard</span></span>
+            </div>
+            <div class="nav-right">
+                <div class="refresh-indicator" id="refreshIndicator">
+                    <i class="fas fa-circle-notch fa-spin"></i>
+                    <span>Auto-refresh: <span id="refreshTimer">5</span>s</span>
+                </div>
+                <div class="user-info" id="userInfo">
+                    <div class="avatar" id="userAvatar">A</div>
+                    <span id="userName">Admin</span>
+                </div>
+                <button class="btn-secondary" onclick="window.location.href='dashboard.html'">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Header -->
+            <div class="page-header">
+                <div>
+                    <h1>System Monitoring</h1>
+                    <p class="subtitle">Real-time server performance metrics</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn-icon" id="toggleAutoRefresh" title="Toggle auto-refresh">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <button class="btn-icon" onclick="location.reload()" title="Refresh now">
+                        <i class="fas fa-redo"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- System Info Cards -->
+            <div class="stats-grid">
+                <!-- CPU Card -->
+                <div class="stat-card">
+                    <div class="card-header">
+                        <div class="card-icon cpu-icon">
+                            <i class="fas fa-microchip"></i>
+                        </div>
+                        <div>
+                            <h3>CPU Usage</h3>
+                            <p class="card-subtitle" id="cpuModel">Loading...</p>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="stat-value">
+                            <span class="value" id="cpuUsage">--</span>
+                            <span class="unit">%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="cpuProgress"></div>
+                        </div>
+                        <div class="stat-status" id="cpuStatus">
+                            <span class="status-dot"></span>
+                            <span class="status-text">Loading...</span>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="stat-detail">
+                            <span class="detail-label">Cores</span>
+                            <span class="detail-value" id="cpuCores">--</span>
+                        </div>
+                        <div class="stat-detail">
+                            <span class="detail-label">Speed</span>
+                            <span class="detail-value" id="cpuSpeed">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Memory Card -->
+                <div class="stat-card">
+                    <div class="card-header">
+                        <div class="card-icon memory-icon">
+                            <i class="fas fa-memory"></i>
+                        </div>
+                        <div>
+                            <h3>Memory Usage</h3>
+                            <p class="card-subtitle" id="memoryTotal">Loading...</p>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="stat-value">
+                            <span class="value" id="memoryUsage">--</span>
+                            <span class="unit">%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="memoryProgress"></div>
+                        </div>
+                        <div class="stat-status" id="memoryStatus">
+                            <span class="status-dot"></span>
+                            <span class="status-text">Loading...</span>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="stat-detail">
+                            <span class="detail-label">Used</span>
+                            <span class="detail-value" id="memoryUsed">--</span>
+                        </div>
+                        <div class="stat-detail">
+                            <span class="detail-label">Free</span>
+                            <span class="detail-value" id="memoryFree">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Disk Card -->
+                <div class="stat-card">
+                    <div class="card-header">
+                        <div class="card-icon disk-icon">
+                            <i class="fas fa-hard-drive"></i>
+                        </div>
+                        <div>
+                            <h3>Disk Usage</h3>
+                            <p class="card-subtitle" id="diskTotal">Loading...</p>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="stat-value">
+                            <span class="value" id="diskUsage">--</span>
+                            <span class="unit">%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="diskProgress"></div>
+                        </div>
+                        <div class="stat-status" id="diskStatus">
+                            <span class="status-dot"></span>
+                            <span class="status-text">Loading...</span>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="stat-detail">
+                            <span class="detail-label">Used</span>
+                            <span class="detail-value" id="diskUsed">--</span>
+                        </div>
+                        <div class="stat-detail">
+                            <span class="detail-label">Free</span>
+                            <span class="detail-value" id="diskFree">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- System Info Card -->
+                <div class="stat-card">
+                    <div class="card-header">
+                        <div class="card-icon system-icon">
+                            <i class="fas fa-server"></i>
+                        </div>
+                        <div>
+                            <h3>System Info</h3>
+                            <p class="card-subtitle" id="osDistro">Loading...</p>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="system-info-list">
+                            <div class="info-row">
+                                <span class="info-label">Uptime</span>
+                                <span class="info-value" id="systemUptime">--</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Platform</span>
+                                <span class="info-value" id="systemPlatform">--</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Hostname</span>
+                                <span class="info-value" id="systemHostname">--</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Architecture</span>
+                                <span class="info-value" id="systemArch">--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="charts-grid">
+                <!-- CPU History Chart -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3><i class="fas fa-chart-line"></i> CPU Usage History</h3>
+                        <span class="chart-subtitle">Last 20 readings</span>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="cpuChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Memory History Chart -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3><i class="fas fa-chart-area"></i> Memory Usage History</h3>
+                        <span class="chart-subtitle">Last 20 readings</span>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="memoryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Process Info -->
+            <div class="info-card">
+                <div class="info-card-header">
+                    <h3><i class="fas fa-list"></i> Process Information</h3>
+                </div>
+                <div class="info-card-body">
+                    <div class="process-stats">
+                        <div class="process-stat">
+                            <span class="process-label">Total Processes</span>
+                            <span class="process-value" id="processAll">--</span>
+                        </div>
+                        <div class="process-stat">
+                            <span class="process-label">Running</span>
+                            <span class="process-value running" id="processRunning">--</span>
+                        </div>
+                        <div class="process-stat">
+                            <span class="process-label">Sleeping</span>
+                            <span class="process-value" id="processSleeping">--</span>
+                        </div>
+                        <div class="process-stat">
+                            <span class="process-label">Blocked</span>
+                            <span class="process-value blocked" id="processBlocked">--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loader">
+            <i class="fas fa-circle-notch fa-spin"></i>
+            <p>Loading system stats...</p>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/api.js"></script>
+    <script src="js/admin-dashboard.js"></script>
+</body>
+
+</html>

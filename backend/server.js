@@ -71,6 +71,7 @@ const messageRoutes = require('./routes/messages');
 const webhookRoutes = require('./routes/webhooks');
 const statsRoutes = require('./routes/statistics');
 const sendRoutes = require('./routes/send');  // Simple send endpoint (Fonnte-like)
+const systemStatsRoutes = require('./routes/systemStats');  // System monitoring
 
 // Use Routes
 app.use('/api/auth', authRoutes);
@@ -81,6 +82,7 @@ app.use('/api/messages', messageRoutes);
 app.use('/api/webhooks', webhookRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/auto-replies', require('./routes/autoReply'));
+app.use('/api/system', systemStatsRoutes);  // System monitoring endpoint
 app.use('/api', sendRoutes);  // Simple /api/send endpoint
 
 // ============================================

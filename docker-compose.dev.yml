@@ -1,0 +1,103 @@
+version: '3.8'
+
+# Docker Compose untuk Development
+# Usage: docker-compose -f docker-compose.dev.yml up
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: waapi-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-waapi_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-waapi_dev_password}
+      POSTGRES_DB: ${DB_NAME:-waapi_db}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+      - ./backend/database-complete.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    networks:
+      - waapi-dev-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-waapi_user} -d ${DB_NAME:-waapi_db}" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # Backend dengan hot-reload untuk development
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: waapi-backend-dev
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      PORT: ${PORT:-5000}
+      DATABASE_URL: postgresql://${DB_USER:-waapi_user}:${DB_PASSWORD:-waapi_dev_password}@postgres:5432/${DB_NAME:-waapi_db}
+      JWT_SECRET: ${JWT_SECRET:-dev-jwt-secret-change-this}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-900000}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      APP_NAME: ${APP_NAME:-WA Gateway Dev}
+    volumes:
+      # Hot reload - mount source code
+      - ./backend:/app/backend:delegated
+      - ./css:/app/css:delegated
+      - ./js:/app/js:delegated
+      - ./*.html:/app/:delegated
+      # Persist data
+      - whatsapp_dev_sessions:/app/backend/.wwebjs_auth
+      - whatsapp_dev_cache:/app/backend/.wwebjs_cache
+      - uploads_dev_data:/app/backend/uploads
+      # Exclude node_modules
+      - /app/backend/node_modules
+    ports:
+      - "${APP_PORT:-5000}:5000"
+    networks:
+      - waapi-dev-network
+    command: npm run dev
+
+  # pgAdmin for database management
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: waapi-pgadmin-dev
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@dev.local}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+      PGADMIN_LISTEN_PORT: 80
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    volumes:
+      - pgadmin_dev_data:/var/lib/pgadmin
+    networks:
+      - waapi-dev-network
+    depends_on:
+      - postgres
+
+volumes:
+  postgres_dev_data:
+    driver: local
+  whatsapp_dev_sessions:
+    driver: local
+  whatsapp_dev_cache:
+    driver: local
+  uploads_dev_data:
+    driver: local
+  pgadmin_dev_data:
+    driver: local
+
+networks:
+  waapi-dev-network:
+    driver: bridge
